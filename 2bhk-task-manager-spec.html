@@ -1,0 +1,1868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2BHK Task Manager — Full Project Spec</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Fraunces:ital,wght@0,300;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0c0f;
+    --surface: #141418;
+    --surface2: #1c1c22;
+    --border: #2a2a33;
+    --accent: #e8ff5a;
+    --accent2: #ff6b35;
+    --accent3: #5adfff;
+    --accent4: #c77dff;
+    --text: #f0f0f5;
+    --muted: #7a7a8c;
+    --tag-bg: #1e1e28;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 60px;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(232,255,90,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -100px; left: -100px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(90,223,255,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .hero-tag::before {
+    content: '';
+    display: inline-block;
+    width: 32px; height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(48px, 7vw, 96px);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    margin-bottom: 24px;
+    max-width: 900px;
+  }
+
+  h1 .highlight { color: var(--accent); }
+  h1 .soft { color: var(--muted); font-weight: 400; }
+
+  .hero-desc {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 300;
+    color: var(--muted);
+    max-width: 520px;
+    margin-bottom: 48px;
+    line-height: 1.8;
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    flex-wrap: wrap;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* NAV / TOC */
+  .toc {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(12,12,15,0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 60px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  .toc a {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .toc a:hover { color: var(--text); border-color: var(--accent); }
+
+  /* MAIN LAYOUT */
+  main { max-width: 1200px; margin: 0 auto; padding: 80px 60px; }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 100px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    margin-bottom: 48px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    min-width: 40px;
+  }
+
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    margin-top: 36px;
+  }
+
+  h3:first-child { margin-top: 0; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: rgba(232,255,90,0.3); }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .card.cooking::before { background: var(--accent); }
+  .card.trash::before   { background: var(--accent2); }
+  .card.wash::before    { background: var(--accent3); }
+  .card.consume::before { background: var(--accent4); }
+  .card.water::before   { background: #5affa0; }
+  .card.buy::before     { background: #ffb347; }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .icon.cooking { background: rgba(232,255,90,0.1); }
+  .icon.trash   { background: rgba(255,107,53,0.1); }
+  .icon.wash    { background: rgba(90,223,255,0.1); }
+  .icon.consume { background: rgba(199,125,255,0.1); }
+  .icon.water   { background: rgba(90,255,160,0.1); }
+  .icon.buy     { background: rgba(255,179,71,0.1); }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+
+  @media (max-width: 768px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    main, .hero, .toc { padding-left: 24px; padding-right: 24px; }
+  }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: #0a0a0e;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    line-height: 1.9;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  .code-block .comment { color: #4a4a5c; }
+  .code-block .keyword { color: var(--accent3); }
+  .code-block .string  { color: var(--accent4); }
+  .code-block .num     { color: var(--accent2); }
+  .code-block .fn      { color: var(--accent); }
+  .code-block .type    { color: #5affa0; }
+  .code-block .label   { color: var(--muted); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; }
+
+  .code-lang {
+    position: absolute;
+    top: 12px; right: 16px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* FLOW */
+  .flow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+    padding: 20px;
+    background: var(--surface2);
+    border-radius: 8px;
+  }
+
+  .flow-person {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    color: var(--text);
+    transition: all 0.2s;
+  }
+
+  .flow-person.active { border-color: var(--accent); color: var(--accent); background: rgba(232,255,90,0.08); }
+  .flow-person.done   { border-color: var(--muted); color: var(--muted); opacity: 0.5; }
+  .flow-person.override { border-color: var(--accent2); color: var(--accent2); background: rgba(255,107,53,0.1); }
+
+  .flow-arrow {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .flow-label {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 6px;
+    text-align: center;
+    width: 40px;
+  }
+
+  .flow-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* TABLE */
+  .spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 16px 0;
+  }
+
+  .spec-table th {
+    background: var(--surface2);
+    padding: 12px 16px;
+    text-align: left;
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .spec-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(42,42,51,0.5);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+
+  .spec-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* TAGS */
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 500;
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .tag.yellow { border-color: rgba(232,255,90,0.4); color: var(--accent); background: rgba(232,255,90,0.06); }
+  .tag.orange { border-color: rgba(255,107,53,0.4); color: var(--accent2); background: rgba(255,107,53,0.06); }
+  .tag.blue   { border-color: rgba(90,223,255,0.4); color: var(--accent3); background: rgba(90,223,255,0.06); }
+  .tag.purple { border-color: rgba(199,125,255,0.4); color: var(--accent4); background: rgba(199,125,255,0.06); }
+  .tag.green  { border-color: rgba(90,255,160,0.4); color: #5affa0; background: rgba(90,255,160,0.06); }
+
+  /* RULE BLOCK */
+  .rule-block {
+    border-left: 3px solid var(--accent);
+    padding: 16px 20px;
+    background: rgba(232,255,90,0.03);
+    border-radius: 0 8px 8px 0;
+    margin: 12px 0;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+
+  .rule-block.orange { border-color: var(--accent2); background: rgba(255,107,53,0.03); }
+  .rule-block.blue   { border-color: var(--accent3); background: rgba(90,223,255,0.03); }
+  .rule-block.purple { border-color: var(--accent4); background: rgba(199,125,255,0.03); }
+  .rule-block.green  { border-color: #5affa0; background: rgba(90,255,160,0.03); }
+
+  /* SCENARIO BOX */
+  .scenario {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin: 12px 0;
+  }
+
+  .scenario-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .scenario-title::before {
+    content: '';
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  p { color: var(--muted); line-height: 1.8; margin-bottom: 12px; }
+  p strong { color: var(--text); }
+
+  ul, ol { padding-left: 20px; margin: 8px 0; }
+  li { color: var(--muted); margin-bottom: 6px; line-height: 1.7; }
+  li strong { color: var(--text); }
+
+  /* PHASE TIMELINE */
+  .phases {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    padding-left: 40px;
+  }
+
+  .phases::before {
+    content: '';
+    position: absolute;
+    left: 15px; top: 20px; bottom: 20px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent3), var(--accent4), var(--accent2));
+  }
+
+  .phase {
+    position: relative;
+    padding: 24px 0 24px 32px;
+  }
+
+  .phase::before {
+    content: '';
+    position: absolute;
+    left: -25px; top: 32px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--accent);
+    background: var(--bg);
+  }
+
+  .phase-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .phase-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+
+  /* DB SCHEMA */
+  .schema-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    margin: 8px 0;
+  }
+
+  .schema-table th {
+    background: rgba(255,255,255,0.04);
+    padding: 8px 12px;
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .schema-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(42,42,51,0.4);
+    color: var(--muted);
+  }
+
+  .schema-table .col-name { color: var(--accent3); }
+  .schema-table .col-type { color: var(--accent4); }
+  .schema-table .col-key  { color: var(--accent2); font-size: 10px; }
+
+  /* API TABLE */
+  .method {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .method.get    { background: rgba(90,255,160,0.15); color: #5affa0; }
+  .method.post   { background: rgba(232,255,90,0.15); color: var(--accent); }
+  .method.patch  { background: rgba(90,223,255,0.15); color: var(--accent3); }
+  .method.delete { background: rgba(255,107,53,0.15); color: var(--accent2); }
+
+  .endpoint { color: var(--accent3); }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 40px 0;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  .footer-brand {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: var(--text);
+    font-size: 16px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* Tooltips */
+  [data-tip] { position: relative; cursor: help; text-decoration: underline; text-decoration-style: dotted; text-decoration-color: var(--muted); }
+  [data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    color: var(--text);
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-tag">Full Project Spec · 2BHK Roommate App</div>
+  <h1>
+    <span class="soft">Task</span><br>
+    <span class="highlight">Manager</span>
+  </h1>
+  <p class="hero-desc">
+    A complete spec for managing cooking, cleaning, consumables, and water rotations among 4 roommates — with smart override handling, load balancing, and fair splits.
+  </p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-num">6</span><span class="stat-label">Task Modules</span></div>
+    <div class="stat"><span class="stat-num">1</span><span class="stat-label">Reusable Engine</span></div>
+    <div class="stat"><span class="stat-num">4</span><span class="stat-label">Build Phases</span></div>
+    <div class="stat"><span class="stat-num">4</span><span class="stat-label">Roommates</span></div>
+  </div>
+</section>
+
+<!-- ===== NAV ===== -->
+<nav class="toc">
+  <a href="#core">Core Engine</a>
+  <a href="#cooking">Cooking</a>
+  <a href="#calendar">Calendar</a>
+  <a href="#trash">Trash</a>
+  <a href="#washroom">Washroom</a>
+  <a href="#consumables">Consumables</a>
+  <a href="#water">Water</a>
+  <a href="#buylist">Buy List</a>
+  <a href="#schema">DB Schema</a>
+  <a href="#api">API</a>
+  <a href="#phases">Build Phases</a>
+</nav>
+
+<main>
+
+<!-- ===== 0. PEOPLE & STATUS ===== -->
+<section class="section" id="people">
+  <div class="section-header">
+    <span class="section-num">00</span>
+    <h2>People, Status & Presence</h2>
+  </div>
+
+  <p>Every rotation module reads two flags per person before doing anything. These two flags together decide who is <em>eligible</em> for a task.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><div class="icon cooking">⚡</div>Status</div>
+      <table class="spec-table">
+        <thead><tr><th>Value</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag yellow">ACTIVE</span></td><td>Person lives here and participates in all rotations.</td></tr>
+          <tr><td><span class="tag">INACTIVE</span></td><td>Temporarily removed from <strong>all</strong> task rotations. Rotation sequences shrink automatically. Reactivation picks up where the sequence left off.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="icon wash">📍</div>Presence</div>
+      <table class="spec-table">
+        <thead><tr><th>Value</th><th>Meaning</th></tr></thead>
+        <tbody>
+          <tr><td><span class="tag yellow">PRESENT</span></td><td>At home today. Included in today's eligible pool.</td></tr>
+          <tr><td><span class="tag">AWAY</span></td><td>Out of town. Skipped for tasks while away. Rotation does not advance for them.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="rule-block" style="margin-top:20px;">
+    <strong>Eligibility rule (used everywhere):</strong><br>
+    <code>eligible = users WHERE status = ACTIVE AND presence = PRESENT</code><br>
+    All modules compute their "who's next" answer from this live filtered set.
+  </div>
+
+  <div class="scenario" style="margin-top:20px;">
+    <div class="scenario-title">Presence isolation — the key rule</div>
+    <p>If only 2 people are present, the rotation runs between those 2 only. The other 2 are completely invisible to the engine. When they return, they are added back to the eligible pool and the sequence continues — <strong>the order of the original sequence is always preserved</strong>. No reshuffle happens on return.</p>
+    <div class="flow">
+      <div class="flow-item"><div class="flow-person done">A</div><div class="flow-label">Away</div></div>
+      <div class="flow-arrow">·</div>
+      <div class="flow-item"><div class="flow-person active">B</div><div class="flow-label">Turn 1</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person active">C</div><div class="flow-label">Turn 2</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person done">D</div><div class="flow-label">Away</div></div>
+    </div>
+    <p style="margin-top:8px; font-size:12px;">↑ Only B and C are present. They cycle B → C → B → C. A and D don't interfere.</p>
+  </div>
+</section>
+
+<!-- ===== 1. CORE ENGINE ===== -->
+<section class="section" id="core">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2>The Reusable Rotation Engine</h2>
+  </div>
+
+  <p>Cooking and Trash use one engine. The key insight for cooking: <strong>the engine is group-aware</strong>. Each unique combination of present people is a distinct group with its own saved cycle state. Trash uses the same engine but without group-splitting (simpler).</p>
+
+  <h3>Master Order — defined once, never changes</h3>
+  <div class="rule-block">
+    A fixed sequence is set when the app is first configured, e.g. <strong>A → B → C → D</strong>.<br>
+    Every group's sequence is derived by filtering the master order to only that group's members.<br>
+    <strong>Example:</strong> Master = A B C D → Group {A,D} = A→D &nbsp;|&nbsp; Group {A,B,D} = A→B→D &nbsp;|&nbsp; Group {B,C} = B→C
+  </div>
+
+  <h3>Group Identity</h3>
+  <div class="code-block">
+<span class="label">How the current group is identified</span>
+
+currentGroup = users
+  .<span class="fn">filter</span>(u => u.status == ACTIVE && u.presence == PRESENT)
+  .<span class="fn">sortBy</span>(masterOrder)           <span class="comment">// always consistent ordering</span>
+  .<span class="fn">map</span>(u => u.id)
+
+groupKey = currentGroup.<span class="fn">join</span>(<span class="string">","</span>)     <span class="comment">// e.g. "A,B,D"</span>
+  </div>
+
+  <h3>State the engine tracks — per group row</h3>
+  <div class="code-block">
+<span class="label">group_rotation_state fields (one row per group)</span>
+
+<span class="type">groupKey</span>              <span class="comment">// "A,B,D" — the identity of this group</span>
+<span class="type">sequence[]</span>            <span class="comment">// derived from master order: [A, B, D]</span>
+<span class="type">currentCycleOrder[]</span>   <span class="comment">// working copy — may be reordered if override happened</span>
+<span class="type">cycleIndex</span>            <span class="comment">// pointer into currentCycleOrder</span>
+<span class="type">lastActualUserId</span>      <span class="comment">// for consecutive-cook prevention</span>
+<span class="type">lastActivityAt</span>        <span class="comment">// for session expiry check</span>
+  </div>
+
+  <h3>Looking up state when group changes</h3>
+  <div class="code-block">
+<span class="fn">getGroupState</span>(groupKey) {
+  row = db.<span class="fn">find</span>(groupKey)
+
+  <span class="keyword">if</span> (!row) {
+    <span class="comment">// Brand new group — never cooked together before</span>
+    row = <span class="fn">createFreshState</span>(groupKey)   <span class="comment">// cycleIndex = 0, start from A</span>
+  }
+
+  <span class="comment">// ⚠️ NO time-based reset. State is always resumed as-is.</span>
+  <span class="comment">// If ABD was mid-cycle (D is next), D cooks next even after 6 months.</span>
+  <span class="comment">// The ONLY reset is the natural cycle reset below.</span>
+
+  <span class="keyword">return</span> row
+}
+  </div>
+
+  <h3>Normal Turn, Override &amp; Consecutive Check</h3>
+  <div class="code-block">
+<span class="fn">getAssigned</span>(groupKey) {
+  state = <span class="fn">getGroupState</span>(groupKey)
+  <span class="keyword">return</span> state.currentCycleOrder[state.cycleIndex]
+}
+
+<span class="fn">markDone</span>(actualUserId) {
+  state = <span class="fn">getGroupState</span>(groupKey)
+  assigned = state.currentCycleOrder[state.cycleIndex]
+
+  <span class="keyword">if</span> (actualUserId != assigned) {
+    <span class="fn">applyOverride</span>(state, assigned, actualUserId)
+  }
+
+  <span class="fn">checkConsecutive</span>(state, actualUserId)
+  state.cycleIndex++
+  state.lastActivityAt = NOW()
+
+  <span class="keyword">if</span> (state.cycleIndex >= state.currentCycleOrder.size) {
+    state.currentCycleOrder = state.sequence.<span class="fn">copy()</span>   <span class="comment">// reset to A B D</span>
+    state.cycleIndex = <span class="num">0</span>
+  }
+
+  db.<span class="fn">save</span>(state)
+}
+
+<span class="fn">applyOverride</span>(state, assigned, actual) {
+  state.currentCycleOrder.<span class="fn">remove</span>(actual)
+  pos = state.currentCycleOrder.<span class="fn">indexOf</span>(assigned)
+  state.currentCycleOrder.<span class="fn">insert</span>(pos, actual)
+  <span class="comment">// cycleIndex unchanged — now points to actual at assigned's old slot</span>
+}
+
+<span class="fn">checkConsecutive</span>(state, actualUser) {
+  <span class="keyword">if</span> (actualUser == state.lastActualUserId && state.sequence.size > <span class="num">1</span>) {
+    <span class="keyword">throw</span> <span class="string">"Cannot cook back-to-back when others are available"</span>
+  }
+  state.lastActualUserId = actualUser
+}
+  </div>
+
+  <h3>Pre-populated Groups (4 roommates)</h3>
+  <div class="scenario">
+    <div class="scenario-title">All 11 possible group combinations — all rows exist in DB from day 1</div>
+    <div class="grid-3" style="gap:12px; margin-top:12px;">
+      <div>
+        <p style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">2-person groups (6)</p>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <span class="tag blue">AB → A→B</span>
+          <span class="tag blue">AC → A→C</span>
+          <span class="tag blue">AD → A→D</span>
+          <span class="tag blue">BC → B→C</span>
+          <span class="tag blue">BD → B→D</span>
+          <span class="tag blue">CD → C→D</span>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">3-person groups (4)</p>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <span class="tag yellow">ABC → A→B→C</span>
+          <span class="tag yellow">ABD → A→B→D</span>
+          <span class="tag yellow">ACD → A→C→D</span>
+          <span class="tag yellow">BCD → B→C→D</span>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">4-person group (1)</p>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <span class="tag green">ABCD → A→B→C→D</span>
+        </div>
+        <p style="font-size:11px; color:var(--muted); margin-top:16px;"><strong>Total: 11 rows</strong> — each with its own cycleIndex and history</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 2. COOKING ===== -->
+<section class="section" id="cooking">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2>Cooking Rotation</h2>
+  </div>
+
+  <div class="card cooking">
+    <div class="card-title"><div class="icon cooking">🍳</div>Cooking</div>
+    <p>One person cooks per day. The active group is whoever is <strong>ACTIVE + PRESENT</strong> right now. Each unique group has its own independent cycle stored in <code>group_rotation_state</code>.</p>
+  </div>
+
+  <h3>Full Scenario Walkthrough — Group Changes</h3>
+
+  <div class="scenario">
+    <div class="scenario-title">Step 1 — Only A and D present</div>
+    <p>Active group: <strong>AD</strong> → sequence derived from master order: <strong>A → D</strong></p>
+    <div class="flow">
+      <div class="flow-item"><div class="flow-person active">A</div><div class="flow-label">Day 1</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person active">D</div><div class="flow-label">Day 2</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person">A</div><div class="flow-label">Day 3</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person">D</div><div class="flow-label">Day 4</div></div>
+    </div>
+    <p style="font-size:12px; margin-top:8px;">Group <strong>AD</strong> state: cycleIndex advances each day. Assume after Day 1 (A cooked), cycleIndex = 1 → D is next.</p>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-title">Step 2 — B joins. Group becomes ABD</div>
+    <p>System detects group change: now <strong>ABD</strong>. Looks up <code>group_rotation_state</code> for key <strong>"A,B,D"</strong>.</p>
+    <ul>
+      <li><strong>If ABD state exists and is recent</strong> → resume from saved cycleIndex for ABD.</li>
+      <li><strong>If ABD never cooked together / state is stale</strong> → start fresh: cycleIndex = 0 → <strong>A</strong> cooks first.</li>
+    </ul>
+    <p>The <strong>AD</strong> group state is frozen at its current cycleIndex (D is next). When B leaves again and it's just AD, that state resumes.</p>
+    <div class="flow" style="margin-top:12px;">
+      <div class="flow-item"><div class="flow-person active">A</div><div class="flow-label">ABD Day 1</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person active">B</div><div class="flow-label">ABD Day 2</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person">D</div><div class="flow-label">ABD Day 3</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person">A</div><div class="flow-label">ABD Day 4</div></div>
+    </div>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-title">Step 3 — C joins. Group becomes ABCD</div>
+    <p>System looks up state for <strong>"A,B,C,D"</strong>. If new, starts from A. ABD state is frozen at "last cooked B, D is next".</p>
+    <div class="flow" style="margin-top:8px;">
+      <div class="flow-item"><div class="flow-person active">A</div><div class="flow-label">ABCD-1</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person active">B</div><div class="flow-label">ABCD-2</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person active">C</div><div class="flow-label">ABCD-3</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person active">D</div><div class="flow-label">ABCD-4</div></div>
+    </div>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-title">Step 4 — C leaves. Group back to ABD</div>
+    <p>System looks up <strong>ABD</strong> state. It was frozen at: <em>"last cooked B, D is next"</em> (from Step 2). So D cooks now. Cycle continues: D → A → B → D…</p>
+    <div class="flow" style="margin-top:8px;">
+      <div class="flow-item"><div class="flow-person done">A</div><div class="flow-label">Done</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person done">B</div><div class="flow-label">Done</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person active">D</div><div class="flow-label">Next ←</div></div>
+    </div>
+    <p style="font-size:12px; margin-top:8px;">ABD resumed exactly where it paused. ABCD state is frozen until all four are present again.</p>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-title">Step 5 — B also leaves. Group back to AD</div>
+    <p>System looks up <strong>AD</strong> state. It was frozen at: <em>"last cooked A, D is next"</em> (from Step 1). D cooks.</p>
+    <div class="flow" style="margin-top:8px;">
+      <div class="flow-item"><div class="flow-person done">A</div><div class="flow-label">Done</div></div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-item"><div class="flow-person active">D</div><div class="flow-label">Resumes</div></div>
+    </div>
+  </div>
+
+  <h3>Override within a group</h3>
+  <p>Works exactly as before — but only within the current group. If ABD is active and D takes B's turn:</p>
+  <div class="flow">
+    <div class="flow-item"><div class="flow-person done">A</div><div class="flow-label">Done</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-item"><div class="flow-person override">D</div><div class="flow-label">Override</div></div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-item"><div class="flow-person active">B</div><div class="flow-label">Next</div></div>
+  </div>
+  <p style="font-size:12px; margin-top:8px;">This cycle becomes <strong>A D B</strong> for group ABD. After B completes → resets to <strong>A B D</strong> for next cycle.</p>
+
+  <h3>When does a group's cycle reset to the beginning?</h3>
+  <div class="rule-block">
+    <strong>Only when the cycle completes naturally</strong> — every member of the group has cooked once in the current cycle.<br><br>
+    If ABD was mid-cycle (A cooked, B cooked, D is next) and the group doesn't form again for 3 months — when they're back together, <strong>D still cooks next</strong>. The state is always resumed exactly where it was frozen.<br><br>
+    <code>cycleIndex = 0</code> only triggers inside <code>markDone()</code> when <code>cycleIndex</code> reaches <code>currentCycleOrder.size</code>. No time-based reset exists.
+  </div>
+
+  <h3>What gets recorded per cooking event</h3>
+  <div class="code-block">
+<span class="label">cooking_history row</span>
+
+groupKey       : <span class="string">"A,B,D"</span>
+assignedUserId : B
+actualUserId   : D           <span class="comment">// same as assigned if normal</span>
+cookedAt       : 2024-01-15
+cycleNumber    : <span class="num">3</span>           <span class="comment">// which cycle this belonged to (for calendar grouping)</span>
+  </div>
+</section>
+
+<!-- ===== 2.5 CALENDAR ===== -->
+<section class="section" id="calendar">
+  <div class="section-header">
+    <span class="section-num">02.5</span>
+    <h2>Cooking Calendar</h2>
+  </div>
+
+  <div class="card cooking">
+    <div class="card-title"><div class="icon cooking">📅</div>Calendar View</div>
+    <p>A filterable calendar showing who cooked on what date. Filter by any group combination. Shows the last <strong>3 complete cycles</strong> per group.</p>
+  </div>
+
+  <h3>How filtering works</h3>
+  <p>The user picks a group combination from a list (e.g., AB, ABD, ABCD). The calendar shows all <code>cooking_history</code> rows where <code>groupKey</code> matches. Dates with a cook are highlighted with the person's initial.</p>
+
+  <div class="scenario">
+    <div class="scenario-title">Example: Filter = ABD</div>
+    <table class="spec-table" style="margin-top:8px;">
+      <thead><tr><th>Date</th><th>Cooked by</th><th>Assigned to</th><th>Override?</th><th>Cycle #</th></tr></thead>
+      <tbody>
+        <tr><td>Jan 5</td><td>A</td><td>A</td><td>—</td><td>1</td></tr>
+        <tr><td>Jan 6</td><td>D</td><td>B</td><td>✅ D took B's turn</td><td>1</td></tr>
+        <tr><td>Jan 7</td><td>B</td><td>B</td><td>—</td><td>1</td></tr>
+        <tr><td>Jan 8</td><td>A</td><td>A</td><td>—</td><td>2</td></tr>
+        <tr><td>Jan 9</td><td>B</td><td>B</td><td>—</td><td>2</td></tr>
+        <tr><td>Jan 10</td><td>D</td><td>D</td><td>—</td><td>2</td></tr>
+        <tr><td>Jan 11</td><td>A</td><td>A</td><td>—</td><td>3</td></tr>
+        <tr><td>Jan 12</td><td>B</td><td>B</td><td>—</td><td>3</td></tr>
+        <tr><td>Jan 13</td><td>D</td><td>D</td><td>—</td><td>3</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12px; margin-top:8px;">3 complete cycles shown = 9 rows for a 3-person group. For a 4-person group (ABCD), 3 cycles = 12 rows.</p>
+  </div>
+
+  <h3>Cycles stored per group</h3>
+  <table class="spec-table">
+    <thead><tr><th>Group size</th><th>3 cycles = N entries stored</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>2 people</td><td>6 entries</td><td>AB: 3×2 = 6 rows</td></tr>
+      <tr><td>3 people</td><td>9 entries</td><td>ABD: 3×3 = 9 rows</td></tr>
+      <tr><td>4 people</td><td>12 entries</td><td>ABCD: 3×4 = 12 rows</td></tr>
+    </tbody>
+  </table>
+
+  <div class="rule-block">
+    <strong>Storage rule:</strong> Once a 4th cycle begins for a group, the oldest cycle's rows are deleted from <code>cooking_history</code>. At any time, only 3 cycles of history are retained per group. This keeps the table bounded regardless of how long the app runs.
+  </div>
+
+  <h3>Calendar also shows</h3>
+  <ul>
+    <li>Which group was active on each date (shown as a small tag: "AD", "ABD" etc.)</li>
+    <li>Override indicator — if assigned ≠ actual, a small swap icon appears</li>
+    <li>Current position in the active cycle (e.g., "Cycle 2 · 1 of 3 done")</li>
+  </ul>
+</section>
+
+<!-- ===== 3. TRASH ===== -->
+<section class="section" id="trash">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2>Trash — Wet &amp; Dry</h2>
+  </div>
+
+  <div class="card trash">
+    <div class="card-title"><div class="icon trash">🗑️</div>Trash</div>
+    <p>Split into <strong>WET</strong> and <strong>DRY</strong>. 1 person throws at a time. No fixed rotation — whoever has the fewest complete turns goes next. <strong>1 complete turn = 1 WET + 1 DRY thrown.</strong></p>
+  </div>
+
+  <h3>Complete Turn Definition</h3>
+  <div class="rule-block orange">
+    <code>complete_turns(person) = min(wet_count, dry_count)</code><br><br>
+    A's wet=3, dry=1 → complete_turns = 1 &nbsp;(the 2 extra wet throws don't count as complete yet)<br>
+    B's wet=2, dry=2 → complete_turns = 2<br>
+    C's wet=0, dry=0 → complete_turns = 0 ← goes next for either type
+  </div>
+
+  <h3>Selection Algorithm</h3>
+  <div class="code-block">
+<span class="fn">getNextThrower</span>(trashType: WET | DRY) {
+  eligible = users.<span class="fn">filter</span>(u => u.status==ACTIVE && u.presence==PRESENT)
+
+  sorted = eligible.<span class="fn">sortBy</span>(u => [
+    <span class="fn">min</span>(u.wetCount, u.dryCount) ASC,     <span class="comment">// 1. fewest complete turns first</span>
+    u[trashType + <span class="string">"Count"</span>] ASC,            <span class="comment">// 2. tiebreak: fewest of this specific type</span>
+    u.lastTrashAt ASC                       <span class="comment">// 3. final tiebreak: longest ago</span>
+  ])
+
+  <span class="keyword">return</span> sorted[0]
+}
+
+<span class="fn">markTrashDone</span>(userId, trashType) {
+  <span class="keyword">if</span> (trashType == WET)  user.wetCount++
+  <span class="keyword">if</span> (trashType == DRY)  user.dryCount++
+  user.lastTrashAt = NOW()
+}
+  </div>
+
+  <h3>Scenario Walkthrough — 4 people, mixed throws</h3>
+  <table class="spec-table">
+    <thead>
+      <tr><th>Throw #</th><th>Type</th><th>Counts before (W/D)</th><th>Complete turns</th><th>Assigned to</th><th>Counts after</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td><span class="tag orange">WET</span></td><td>A=0/0, B=0/0, C=0/0, D=0/0</td><td>All=0</td><td>A (tiebreak: alphabetical)</td><td>A=1/0</td></tr>
+      <tr><td>2</td><td><span class="tag">DRY</span></td><td>A=1/0, B=0/0, C=0/0, D=0/0</td><td>A=0, B=0, C=0, D=0</td><td>B (A has 1 dry already, B has 0)</td><td>B=0/1</td></tr>
+      <tr><td>3</td><td><span class="tag orange">WET</span></td><td>A=1/0, B=0/1, C=0/0, D=0/0</td><td>All=0</td><td>C (tied on complete, C has 0 wet)</td><td>C=1/0</td></tr>
+      <tr><td>4</td><td><span class="tag">DRY</span></td><td>A=1/0, B=0/1, C=1/0, D=0/0</td><td>All=0</td><td>D (D has 0 dry)</td><td>D=0/1</td></tr>
+      <tr><td>5</td><td><span class="tag orange">WET</span></td><td>A=1/0, B=0/1, C=1/0, D=0/1</td><td>All=0</td><td>B (B has 0 wet, lowest wet count)</td><td>B=1/1 → complete=1</td></tr>
+      <tr><td>6</td><td><span class="tag">DRY</span></td><td>A=1/0, B=1/1, C=1/0, D=0/1</td><td>A=0,B=1,C=0,D=0</td><td>A (complete=0, dry=0)</td><td>A=1/1 → complete=1</td></tr>
+    </tbody>
+  </table>
+
+  <div class="scenario" style="margin-top:20px;">
+    <div class="scenario-title">A did 3 wet, 0 dry. B did 1 wet, 1 dry. Dry trash needs to go.</div>
+    <table class="spec-table" style="margin-top:8px;">
+      <thead><tr><th>Person</th><th>Wet</th><th>Dry</th><th>Complete turns</th><th>Dry count</th></tr></thead>
+      <tbody>
+        <tr><td><strong>A</strong></td><td>3</td><td>0</td><td style="color:var(--accent)">0 ← lowest</td><td>0 ← lowest</td></tr>
+        <tr><td>B</td><td>1</td><td>1</td><td>1</td><td>1</td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:8px; font-size:13px;"><strong>A is assigned.</strong> Primary sort: A has 0 complete turns vs B's 1. Even if tiebreak was needed, A also has 0 dry vs B's 1.</p>
+  </div>
+
+  <h3>What gets stored per throw</h3>
+  <div class="code-block">
+<span class="label">trash_history row</span>
+
+userId      : A
+trashType   : <span class="string">WET</span>          <span class="comment">// WET | DRY</span>
+thrownAt    : 2024-01-15
+completeTurnsAfter : <span class="num">1</span>   <span class="comment">// snapshot of min(wet,dry) after this throw</span>
+  </div>
+</section>
+
+<!-- ===== 4. WASHROOM ===== -->
+<section class="section" id="washroom">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2>Washroom Cleaning</h2>
+  </div>
+
+  <div class="card wash">
+    <div class="card-title"><div class="icon wash">🚿</div>Washroom Groups</div>
+    <p>Two washrooms, fixed groups. Group 1 is responsible for Washroom 1, Group 2 for Washroom 2. <strong>Groups never interfere with each other.</strong></p>
+  </div>
+
+  <div class="grid-2" style="margin-top:20px;">
+    <div class="scenario">
+      <div class="scenario-title">Washroom 1 — Group 1</div>
+      <div class="flow">
+        <div class="flow-item"><div class="flow-person active">A</div></div>
+        <div class="flow-arrow">+</div>
+        <div class="flow-item"><div class="flow-person active">B</div></div>
+      </div>
+      <p style="font-size:12px; margin-top:8px;">A and B take turns cleaning Washroom 1: A → B → A → B</p>
+    </div>
+    <div class="scenario">
+      <div class="scenario-title">Washroom 2 — Group 2</div>
+      <div class="flow">
+        <div class="flow-item"><div class="flow-person active">C</div></div>
+        <div class="flow-arrow">+</div>
+        <div class="flow-item"><div class="flow-person active">D</div></div>
+      </div>
+      <p style="font-size:12px; margin-top:8px;">C and D take turns cleaning Washroom 2: C → D → C → D</p>
+    </div>
+  </div>
+
+  <h3>All Scenarios</h3>
+  <table class="spec-table" style="margin-top:16px;">
+    <thead><tr><th>Scenario</th><th>Who is present</th><th>What happens</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Normal turn</td>
+        <td>Both in group present</td>
+        <td>Assigned person cleans. Index advances on completion.</td>
+      </tr>
+      <tr>
+        <td>One absent</td>
+        <td>A away, B present</td>
+        <td>B cleans alone. A is skipped. Rotation continues: next turn will be A (when A returns).</td>
+      </tr>
+      <tr>
+        <td><strong>Both absent</strong></td>
+        <td>Both A and B away</td>
+        <td>Washroom 1 goes uncleaned. Status set to <span class="tag orange">PENDING_RESUME</span>. Group 2 does NOT take over. When A or B return, rotation resumes from where it paused. No reset.</td>
+      </tr>
+      <tr>
+        <td>New person joins</td>
+        <td>5th person moves in</td>
+        <td>Admin assigns them to a group manually. They are appended to that group's rotation sequence.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Washroom-specific state</h3>
+  <div class="code-block">
+<span class="label">washroom_state row</span>
+
+washroomNumber   : <span class="num">1</span>
+groupOrder       : [<span class="string">"A"</span>, <span class="string">"B"</span>]        <span class="comment">// never mutated (no override in washroom)</span>
+cycleIndex       : <span class="num">0</span>              <span class="comment">// 0=A's turn, 1=B's turn</span>
+lastActualUserId : <span class="string">"A"</span>
+status           : <span class="string">ACTIVE</span>        <span class="comment">// or PENDING_RESUME when both absent</span>
+  </div>
+
+  <div class="rule-block blue">
+    <strong>No override in washroom.</strong> The group members clean within their own pair. There is no mechanism to swap in someone from the other group.
+  </div>
+</section>
+
+<!-- ===== 5. CONSUMABLES ===== -->
+<section class="section" id="consumables">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2>Consumables Tracking (Eggs, Bread, Milk…)</h2>
+  </div>
+
+  <div class="card consume">
+    <div class="card-title"><div class="icon consume">🥚</div>Consumables</div>
+    <p>No rotation logic. Pure ledger: who bought a batch → how many each person used → split computed at the end.</p>
+  </div>
+
+  <h3>Two-table model</h3>
+  <div class="grid-2" style="margin-top:16px;">
+    <div>
+      <div class="code-block">
+<span class="label">purchase_entry</span>
+
+id
+item          <span class="comment">// EGG | BREAD | MILK | OIL | ...</span>
+totalQty      <span class="comment">// e.g. 30 (eggs)</span>
+totalPrice    <span class="comment">// e.g. 300 (rupees)</span>
+boughtBy      <span class="comment">// userId of who bought</span>
+boughtAt      <span class="comment">// timestamp</span>
+status        <span class="comment">// OPEN | CLOSED</span>
+      </div>
+    </div>
+    <div>
+      <div class="code-block">
+<span class="label">usage_log</span>
+
+id
+purchaseEntryId  <span class="comment">// FK to entry above</span>
+userId
+qty              <span class="comment">// how many used this time</span>
+loggedAt
+
+<span class="comment">// Person picks which entry they're</span>
+<span class="comment">// consuming from when they log usage</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Multiple open batches — no merging</h3>
+  <div class="scenario">
+    <div class="scenario-title">Scenario: 10 eggs remain, A buys 30 more</div>
+    <p>The old entry stays open with its original 30 qty. A creates a <strong>new entry</strong> for 30 eggs. Both entries are <strong>OPEN</strong> simultaneously. Users log usage against whichever entry they consumed from. This preserves per-batch accountability (who bought which batch).</p>
+    <table class="spec-table" style="margin-top:12px;">
+      <thead><tr><th>Entry</th><th>Bought by</th><th>Total</th><th>Used so far</th><th>Remaining</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>Entry #1 (old)</td><td>B</td><td>30</td><td>20</td><td>10</td><td><span class="tag yellow">OPEN</span></td></tr>
+        <tr><td>Entry #2 (new)</td><td>A</td><td>30</td><td>0</td><td>30</td><td><span class="tag yellow">OPEN</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Split Calculation (computed on demand)</h3>
+  <div class="code-block">
+<span class="label">Split for purchase_entry #1 (30 eggs, ₹300, bought by B)</span>
+
+usageLogs = [
+  { userId: A, qty: 8 },
+  { userId: B, qty: 12 },
+  { userId: C, qty: 6 },
+  { userId: D, qty: 4 }
+]
+total used = 30
+
+<span class="fn">perPersonShare</span>(userId) = (userQty / totalQty) * totalPrice
+
+A → (8/30)  * 300 = ₹80
+B → (12/30) * 300 = ₹120   <span class="comment">// B bought, so B is owed ₹180 (300-120)</span>
+C → (6/30)  * 300 = ₹60
+D → (4/30)  * 300 = ₹40
+  </div>
+
+  <div class="rule-block purple">
+    <strong>Settlement is separate.</strong> The consumables module only tracks usage. Who pays whom is handled externally (e.g., Splitwise or a separate expense log). The app stores who bought each batch — that's all that's needed for manual settlement.
+  </div>
+
+  <h3>Closing a batch</h3>
+  <p>When a user marks an entry as <span class="tag">CLOSED</span> (all consumed or entry no longer tracked), the final split snapshot is computed and stored. No further usage can be logged against a closed entry.</p>
+</section>
+
+<!-- ===== 6. WATER ===== -->
+<section class="section" id="water">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <h2>Water Can Fetching</h2>
+  </div>
+
+  <div class="card water">
+    <div class="card-title"><div class="icon water">💧</div>Water Cans</div>
+    <p>2 people go together each time. Uses <strong>load-balanced pairing</strong> — not a fixed rotation list. Always picks the 2 eligible people who have fetched the fewest times.</p>
+  </div>
+
+  <h3>Why not a fixed sequence?</h3>
+  <p>A fixed pair sequence (A+B, C+D, A+C …) breaks fairness the moment someone's presence changes mid-week. Load-balanced selection fixes this: whoever has gone the fewest times always goes next, regardless of when they joined or returned.</p>
+
+  <h3>The algorithm</h3>
+  <div class="code-block">
+<span class="fn">getNextWaterPair()</span> {
+  eligible = users.filter(u => u.status==ACTIVE && u.presence==PRESENT)
+
+  <span class="keyword">if</span> (eligible.size < <span class="num">2</span>) <span class="keyword">throw</span> <span class="string">"Need at least 2 people to fetch water"</span>
+
+  sorted = eligible.<span class="fn">sortBy</span>(u => [u.waterFetchCount ASC, u.lastFetchedAt ASC])
+  <span class="comment">// primary sort:   lowest fetch count first</span>
+  <span class="comment">// tiebreak sort:  who went longest ago comes first</span>
+
+  <span class="keyword">return</span> [sorted[0], sorted[1]]
+}
+
+<span class="fn">markWaterDone()</span> {
+  pair = <span class="fn">getNextWaterPair()</span>
+  pair.<span class="fn">forEach</span>(u => {
+    u.waterFetchCount++
+    u.lastFetchedAt = NOW()
+  })
+}
+  </div>
+
+  <h3>Scenario: 3 people present (A, B, C)</h3>
+  <table class="spec-table">
+    <thead><tr><th>Fetch #</th><th>Counts before</th><th>Pair chosen</th><th>Counts after</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>A=0, B=0, C=0</td><td>A + B (tied, alphabetical tiebreak)</td><td>A=1, B=1, C=0</td></tr>
+      <tr><td>2</td><td>A=1, B=1, C=0</td><td>C + A (C=0 first, A tiebreaks B by time)</td><td>A=2, B=1, C=1</td></tr>
+      <tr><td>3</td><td>A=2, B=1, C=1</td><td>B + C (lowest counts)</td><td>A=2, B=2, C=2</td></tr>
+      <tr><td>4</td><td>A=2, B=2, C=2</td><td>All tied → A + B again</td><td>A=3, B=3, C=2</td></tr>
+    </tbody>
+  </table>
+
+  <div class="rule-block green" style="margin-top:20px;">
+    <strong>D returns from a trip mid-cycle:</strong> D's count = 0, everyone else = 2+. D immediately goes next regardless of whose "turn" it was. The count-based system self-corrects instantly. No manual reset needed.
+  </div>
+
+  <h3>What triggers a fetch?</h3>
+  <p>Manual trigger — any user taps "Get water now" → system shows the next pair → they go → either of them marks it done → counts increment → system shows the new next pair automatically.</p>
+
+  <h3>Water state stored per user</h3>
+  <div class="code-block">
+<span class="label">additional columns on users table</span>
+
+waterFetchCount    INT DEFAULT 0
+lastFetchedAt      TIMESTAMP NULL
+  </div>
+</section>
+
+<!-- ===== 7. BUY LIST ===== -->
+<section class="section" id="buylist">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <h2>Buy List</h2>
+  </div>
+
+  <div class="card buy">
+    <div class="card-title"><div class="icon buy">🛒</div>Buy List</div>
+    <p>A shared list anyone can add to. When someone goes shopping, they check the list, buy items, and mark them bought. Optionally creates a purchase entry in consumables.</p>
+  </div>
+
+  <h3>Lifecycle of a buy list item</h3>
+  <div class="flow" style="flex-direction:column; align-items:flex-start; gap:12px;">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span class="tag">PENDING</span>
+      <span style="color:var(--muted)">→</span>
+      <span style="font-size:13px; color:var(--muted)">Item added by any user. Visible to all.</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span class="tag yellow">BOUGHT</span>
+      <span style="color:var(--muted)">→</span>
+      <span style="font-size:13px; color:var(--muted)">Marked bought by whoever shopped. Records boughtBy + boughtAt.</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span class="tag green">→ Purchase Entry</span>
+      <span style="color:var(--muted)">→</span>
+      <span style="font-size:13px; color:var(--muted)">Optional: auto-creates a consumable entry when marked bought (with qty + price filled in).</span>
+    </div>
+  </div>
+
+  <div class="code-block" style="margin-top:20px;">
+<span class="label">buy_list row</span>
+
+id
+itemName    : <span class="string">"Eggs"</span>
+addedBy     : userId
+addedAt     : timestamp
+status      : <span class="string">PENDING</span> | <span class="string">BOUGHT</span>
+boughtBy    : userId (null until bought)
+boughtAt    : timestamp (null until bought)
+  </div>
+</section>
+
+<!-- ===== 8. DB SCHEMA ===== -->
+<section class="section" id="schema">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <h2>Complete Database Schema</h2>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden;">
+    <div style="padding: 20px 24px; border-bottom:1px solid var(--border);">
+      <span class="tag yellow">users</span>
+    </div>
+    <table class="schema-table">
+      <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="col-name">id</td><td class="col-type">UUID / BIGINT</td><td>Primary key</td></tr>
+        <tr><td class="col-name">name</td><td class="col-type">VARCHAR(100)</td><td>Display name</td></tr>
+        <tr><td class="col-name">status</td><td class="col-type">ENUM</td><td>ACTIVE | INACTIVE</td></tr>
+        <tr><td class="col-name">presence</td><td class="col-type">ENUM</td><td>PRESENT | AWAY</td></tr>
+        <tr><td class="col-name">water_fetch_count</td><td class="col-type">INT</td><td>Default 0. Increments each water fetch.</td></tr>
+        <tr><td class="col-name">last_fetched_at</td><td class="col-type">TIMESTAMP</td><td>Nullable. For tiebreaking water pairs.</td></tr>
+        <tr><td class="col-name">trash_wet_count</td><td class="col-type">INT</td><td>Default 0. Times this person threw wet trash.</td></tr>
+        <tr><td class="col-name">trash_dry_count</td><td class="col-type">INT</td><td>Default 0. Times this person threw dry trash.</td></tr>
+        <tr><td class="col-name">last_trash_at</td><td class="col-type">TIMESTAMP</td><td>Nullable. Final tiebreak for trash selection.</td></tr>
+        <tr><td class="col-name">joined_at</td><td class="col-type">TIMESTAMP</td><td>When they moved in</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-top:16px;">
+    <div style="padding: 20px 24px; border-bottom:1px solid var(--border);">
+      <span class="tag yellow">master_order</span>
+      <span style="color:var(--muted); font-size:12px; margin-left:12px;">Single row — the fixed ABCD sequence defined once</span>
+    </div>
+    <table class="schema-table">
+      <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td>PK (always 1 row)</td></tr>
+        <tr><td class="col-name">ordered_user_ids</td><td class="col-type">JSON</td><td>["A","B","C","D"] — the master sequence. Never changes after setup.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-top:16px;">
+    <div style="padding: 20px 24px; border-bottom:1px solid var(--border);">
+      <span class="tag yellow">group_rotation_state</span>
+      <span style="color:var(--muted); font-size:12px; margin-left:12px;">11 rows — one per possible group combination, pre-seeded</span>
+    </div>
+    <table class="schema-table">
+      <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td>PK</td></tr>
+        <tr><td class="col-name">group_key</td><td class="col-type">VARCHAR(50)</td><td>Unique. Sorted comma-separated IDs: "A,B,D"</td></tr>
+        <tr><td class="col-name">sequence</td><td class="col-type">JSON</td><td>Derived from master order: ["A","B","D"]. Never changes.</td></tr>
+        <tr><td class="col-name">current_cycle_order</td><td class="col-type">JSON</td><td>Working copy for this cycle (may differ from sequence if override happened)</td></tr>
+        <tr><td class="col-name">cycle_index</td><td class="col-type">INT</td><td>Default 0. Pointer into current_cycle_order.</td></tr>
+        <tr><td class="col-name">last_actual_user_id</td><td class="col-type">FK nullable</td><td>For consecutive-cook check</td></tr>
+        <tr><td class="col-name">current_cycle_num</td><td class="col-type">INT</td><td>Increments on each cycle reset. Used for calendar grouping.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-top:16px;">
+    <div style="padding: 20px 24px; border-bottom:1px solid var(--border);">
+      <span class="tag yellow">cooking_history</span>
+      <span style="color:var(--muted); font-size:12px; margin-left:12px;">Per-group cook log — rolling 3 cycles retained per group</span>
+    </div>
+    <table class="schema-table">
+      <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td>PK</td></tr>
+        <tr><td class="col-name">group_key</td><td class="col-type">VARCHAR(50)</td><td>FK to group_rotation_state.group_key</td></tr>
+        <tr><td class="col-name">assigned_user_id</td><td class="col-type">FK</td><td>Who was assigned</td></tr>
+        <tr><td class="col-name">actual_user_id</td><td class="col-type">FK</td><td>Who actually cooked (may differ if override)</td></tr>
+        <tr><td class="col-name">cooked_at</td><td class="col-type">DATE</td><td></td></tr>
+        <tr><td class="col-name">cycle_number</td><td class="col-type">INT</td><td>Which cycle this belongs to (for calendar display + 3-cycle pruning)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-top:16px;">
+    <div style="padding: 20px 24px; border-bottom:1px solid var(--border);">
+      <span class="tag orange">trash_history</span>
+      <span style="color:var(--muted); font-size:12px; margin-left:12px;">One row per throw — wet or dry</span>
+    </div>
+    <table class="schema-table">
+      <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td>PK</td></tr>
+        <tr><td class="col-name">user_id</td><td class="col-type">FK</td><td>Who threw it</td></tr>
+        <tr><td class="col-name">trash_type</td><td class="col-type">ENUM</td><td>WET | DRY</td></tr>
+        <tr><td class="col-name">thrown_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+        <tr><td class="col-name">complete_turns_after</td><td class="col-type">INT</td><td>Snapshot of min(wet,dry) for this user after this throw. For display.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-top:16px;">
+    <div style="padding: 20px 24px; border-bottom:1px solid var(--border);">
+      <span class="tag yellow">task_history</span>
+      <span style="color:var(--muted); font-size:12px; margin-left:12px;">Immutable audit log for trash (cooking uses cooking_history)</span>
+    </div>
+    <table class="schema-table">
+      <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td>PK</td></tr>
+        <tr><td class="col-name">task_type</td><td class="col-type">ENUM</td><td>COOKING | TRASH | WASHROOM | WATER</td></tr>
+        <tr><td class="col-name">assigned_user_id</td><td class="col-type">FK</td><td>Who was supposed to do it</td></tr>
+        <tr><td class="col-name">actual_user_id</td><td class="col-type">FK</td><td>Who actually did it (may differ)</td></tr>
+        <tr><td class="col-name">task_date</td><td class="col-type">DATE</td><td>Date of the task</td></tr>
+        <tr><td class="col-name">notes</td><td class="col-type">TEXT</td><td>Optional reason for override etc.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-top:16px;">
+    <div style="padding: 20px 24px; border-bottom:1px solid var(--border);">
+      <span class="tag blue">washroom_groups</span> &nbsp;
+      <span class="tag blue">washroom_state</span>
+    </div>
+    <table class="schema-table">
+      <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="col-name" colspan="3" style="color:var(--muted); font-style:italic;">washroom_groups</td></tr>
+        <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td>PK</td></tr>
+        <tr><td class="col-name">washroom_number</td><td class="col-type">INT</td><td>1 or 2</td></tr>
+        <tr><td class="col-name">user_id</td><td class="col-type">FK</td><td>Which user is in this group</td></tr>
+        <tr><td class="col-name" colspan="3" style="color:var(--muted); font-style:italic; padding-top:16px;">washroom_state</td></tr>
+        <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td>PK</td></tr>
+        <tr><td class="col-name">washroom_number</td><td class="col-type">INT</td><td>1 or 2</td></tr>
+        <tr><td class="col-name">cycle_index</td><td class="col-type">INT</td><td>Which person in group is next</td></tr>
+        <tr><td class="col-name">status</td><td class="col-type">ENUM</td><td>ACTIVE | PENDING_RESUME</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-top:16px;">
+    <div style="padding: 20px 24px; border-bottom:1px solid var(--border);">
+      <span class="tag purple">purchase_entry</span> &nbsp;
+      <span class="tag purple">usage_log</span>
+    </div>
+    <table class="schema-table">
+      <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="col-name" colspan="3" style="color:var(--muted); font-style:italic;">purchase_entry</td></tr>
+        <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td>PK</td></tr>
+        <tr><td class="col-name">item</td><td class="col-type">VARCHAR</td><td>EGG | BREAD | MILK | OIL | CUSTOM…</td></tr>
+        <tr><td class="col-name">total_qty</td><td class="col-type">INT</td><td>Units bought (e.g. 30 eggs)</td></tr>
+        <tr><td class="col-name">total_price</td><td class="col-type">DECIMAL</td><td>₹300</td></tr>
+        <tr><td class="col-name">bought_by</td><td class="col-type">FK</td><td>Who fronted the cash</td></tr>
+        <tr><td class="col-name">bought_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+        <tr><td class="col-name">status</td><td class="col-type">ENUM</td><td>OPEN | CLOSED</td></tr>
+        <tr><td class="col-name" colspan="3" style="color:var(--muted); font-style:italic; padding-top:16px;">usage_log</td></tr>
+        <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td>PK</td></tr>
+        <tr><td class="col-name">purchase_entry_id</td><td class="col-type">FK</td><td>Which batch</td></tr>
+        <tr><td class="col-name">user_id</td><td class="col-type">FK</td><td>Who used</td></tr>
+        <tr><td class="col-name">qty</td><td class="col-type">INT</td><td>How many units used</td></tr>
+        <tr><td class="col-name">logged_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card" style="padding:0; overflow:hidden; margin-top:16px;">
+    <div style="padding: 20px 24px; border-bottom:1px solid var(--border);">
+      <span class="tag" style="border-color:rgba(255,179,71,0.4); color:#ffb347; background:rgba(255,179,71,0.06);">buy_list</span>
+    </div>
+    <table class="schema-table">
+      <thead><tr><th>Column</th><th>Type</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="col-name">id</td><td class="col-type">BIGINT</td><td>PK</td></tr>
+        <tr><td class="col-name">item_name</td><td class="col-type">VARCHAR</td><td>Free text or from predefined list</td></tr>
+        <tr><td class="col-name">added_by</td><td class="col-type">FK</td><td>userId</td></tr>
+        <tr><td class="col-name">added_at</td><td class="col-type">TIMESTAMP</td><td></td></tr>
+        <tr><td class="col-name">status</td><td class="col-type">ENUM</td><td>PENDING | BOUGHT</td></tr>
+        <tr><td class="col-name">bought_by</td><td class="col-type">FK nullable</td><td>userId</td></tr>
+        <tr><td class="col-name">bought_at</td><td class="col-type">TIMESTAMP nullable</td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===== 9. API ===== -->
+<section class="section" id="api">
+  <div class="section-header">
+    <span class="section-num">09</span>
+    <h2>API Surface</h2>
+  </div>
+
+  <h3>User Management</h3>
+  <table class="spec-table">
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/users</td><td>List all users with status and presence</td></tr>
+      <tr><td><span class="method patch">PATCH</span></td><td class="endpoint">/users/{id}/status</td><td>Set ACTIVE | INACTIVE</td></tr>
+      <tr><td><span class="method patch">PATCH</span></td><td class="endpoint">/users/{id}/presence</td><td>Set PRESENT | AWAY</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Cooking</h3>
+  <table class="spec-table">
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/cooking/next</td><td>Returns assigned cook for today based on current live group (ACTIVE+PRESENT). Auto-detects group key.</td></tr>
+      <tr><td><span class="method post">POST</span></td><td class="endpoint">/cooking/complete</td><td>Body: { actualUserId }. Records cook, handles override, advances cycleIndex for current group.</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/cooking/current-group</td><td>Returns current group key, their sequence, and where they are in the cycle.</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/cooking/calendar?group=A,B,D</td><td>Last 3 cycles of cooking_history for the specified group. Returns dates, assigned, actual, cycle number.</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/cooking/groups</td><td>List all 11 group combinations with their saved state (cycleIndex, last activity, sequence).</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Trash</h3>
+  <table class="spec-table">
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/trash/next?type=wet</td><td>Returns person with fewest complete turns (tiebreak: fewest of this type). type = wet | dry</td></tr>
+      <tr><td><span class="method post">POST</span></td><td class="endpoint">/trash/complete</td><td>Body: { userId, trashType }. Increments wet or dry count, updates lastTrashAt.</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/trash/counts</td><td>All users with wetCount, dryCount, completeTurns. Dashboard leaderboard.</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/trash/history</td><td>Past throws with type, person, timestamp.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Washroom</h3>
+  <table class="spec-table">
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/washroom/{number}/next</td><td>Whose turn to clean (1 or 2)</td></tr>
+      <tr><td><span class="method post">POST</span></td><td class="endpoint">/washroom/{number}/complete</td><td>Mark cleaned. Body: { actualUserId }</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/washroom/{number}/status</td><td>Returns ACTIVE or PENDING_RESUME + reason</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Water Cans</h3>
+  <table class="spec-table">
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/water/next-pair</td><td>Returns the 2 users with lowest fetch count (computed live)</td></tr>
+      <tr><td><span class="method post">POST</span></td><td class="endpoint">/water/complete</td><td>Increments fetch count for current pair. No body needed.</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/water/history</td><td>Past fetch log with pairs and timestamps</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Consumables</h3>
+  <table class="spec-table">
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/consumables</td><td>All OPEN purchase entries</td></tr>
+      <tr><td><span class="method post">POST</span></td><td class="endpoint">/consumables/entry</td><td>Create new purchase entry. Body: { item, totalQty, totalPrice, boughtBy }</td></tr>
+      <tr><td><span class="method post">POST</span></td><td class="endpoint">/consumables/use</td><td>Log usage. Body: { entryId, userId, qty }</td></tr>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/consumables/split/{entryId}</td><td>Computed split per user for an entry</td></tr>
+      <tr><td><span class="method patch">PATCH</span></td><td class="endpoint">/consumables/entry/{id}/close</td><td>Mark entry as CLOSED</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Buy List</h3>
+  <table class="spec-table">
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/buy-list</td><td>All items (filter by status optionally)</td></tr>
+      <tr><td><span class="method post">POST</span></td><td class="endpoint">/buy-list</td><td>Add item. Body: { itemName, addedBy }</td></tr>
+      <tr><td><span class="method patch">PATCH</span></td><td class="endpoint">/buy-list/{id}/bought</td><td>Mark bought. Body: { boughtBy }. Optionally creates purchase entry.</td></tr>
+      <tr><td><span class="method delete">DELETE</span></td><td class="endpoint">/buy-list/{id}</td><td>Remove item (only by person who added it)</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Dashboard</h3>
+  <table class="spec-table">
+    <thead><tr><th>Method</th><th>Endpoint</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><span class="method get">GET</span></td><td class="endpoint">/dashboard</td><td>Single call: today's cook, trash status, washroom turns, water next pair, pending buy list count. Everything the home screen needs.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 10. EDGE CASES ===== -->
+<section class="section" id="edge">
+  <div class="section-header">
+    <span class="section-num">10</span>
+    <h2>Edge Cases Summary</h2>
+  </div>
+
+  <table class="spec-table">
+    <thead>
+      <tr><th>Module</th><th>Edge Case</th><th>Handled How</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tag yellow">Cooking</span></td>
+        <td>Only 1 person present, cooks 3 days in a row</td>
+        <td>Single-person group (e.g., "A"). Consecutive check bypassed when group size == 1. No error.</td>
+      </tr>
+      <tr>
+        <td><span class="tag yellow">Cooking</span></td>
+        <td>Group changes mid-day (B marks present at 3pm)</td>
+        <td>Group key is evaluated at cook time (when someone taps "mark done"). If B is present when done is marked, B is in the group.</td>
+      </tr>
+      <tr>
+        <td><span class="tag yellow">Cooking</span></td>
+        <td>D overrides B in ABD, then D tries to cook again immediately</td>
+        <td>Consecutive check on ABD group state: lastActualUserId == D, group size > 1 → rejected.</td>
+      </tr>
+      <tr>
+        <td><span class="tag yellow">Cooking</span></td>
+        <td>ABD hasn't cooked together for 3 months, D was next</td>
+        <td>State is resumed as-is. D cooks next. No time-based reset. Cycle only resets when it completes naturally.</td>
+      </tr>
+      <tr>
+        <td><span class="tag blue">Washroom</span></td>
+        <td>Both group members absent</td>
+        <td>Status → PENDING_RESUME. Washroom uncleaned. No cross-group interference. Resumes when either returns.</td>
+      </tr>
+      <tr>
+        <td><span class="tag blue">Washroom</span></td>
+        <td>New person moves in (5th roommate)</td>
+        <td>Admin assigns them to a group. Appended to that group's rotation array.</td>
+      </tr>
+      <tr>
+        <td><span class="tag green">Water</span></td>
+        <td>D returns with count = 0, others at count = 5</td>
+        <td>D is immediately selected for next pair. Load balancing self-corrects without any manual reset.</td>
+      </tr>
+      <tr>
+        <td><span class="tag green">Water</span></td>
+        <td>Only 1 person present</td>
+        <td>API returns error: minimum 2 required to fetch water. UI shows "waiting for someone to be present".</td>
+      </tr>
+      <tr>
+        <td><span class="tag purple">Consumables</span></td>
+        <td>New batch bought before old batch finished</td>
+        <td>Separate purchase entries created. Both remain OPEN. User chooses which entry to log usage against.</td>
+      </tr>
+      <tr>
+        <td><span class="tag purple">Consumables</span></td>
+        <td>More usage logged than totalQty</td>
+        <td>API validation: SUM(usage_log.qty) must not exceed purchase_entry.totalQty for OPEN entries. Return 400 if exceeded.</td>
+      </tr>
+      <tr>
+        <td><span class="tag">General</span></td>
+        <td>All users INACTIVE simultaneously</td>
+        <td>All tasks show "No eligible users." No rotation state mutates. Resumes when someone is reactivated.</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ===== 11. BUILD PHASES ===== -->
+<section class="section" id="phases">
+  <div class="section-header">
+    <span class="section-num">11</span>
+    <h2>Build Phases</h2>
+  </div>
+
+  <div class="phases">
+    <div class="phase">
+      <div class="phase-num">Phase 1</div>
+      <div class="phase-title">Core Engine + Cooking</div>
+      <p>User model (status + presence). Generic RotationEngine class. Cooking rotation fully working end-to-end: override, consecutive check, cycle reset. REST API for cooking. Basic dashboard endpoint.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+        <span class="tag yellow">users table</span>
+        <span class="tag yellow">rotation_config</span>
+        <span class="tag yellow">rotation_state</span>
+        <span class="tag yellow">task_history</span>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-num">Phase 2</div>
+      <div class="phase-title">Trash + Washroom + Water</div>
+      <p>Reuse RotationEngine for trash (literally plug in with taskType=TRASH). Washroom variant with group isolation and PENDING_RESUME status. Water load-balanced pair selection using fetch counts.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+        <span class="tag blue">washroom_groups</span>
+        <span class="tag blue">washroom_state</span>
+        <span class="tag green">water_fetch_count on users</span>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-num">Phase 3</div>
+      <div class="phase-title">Consumables + Buy List</div>
+      <p>Purchase entries, usage logging, and computed splits. Buy list with PENDING → BOUGHT lifecycle. Optional auto-creation of purchase entry when buy list item is marked bought.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+        <span class="tag purple">purchase_entry</span>
+        <span class="tag purple">usage_log</span>
+        <span class="tag" style="border-color:rgba(255,179,71,0.4);color:#ffb347;background:rgba(255,179,71,0.06);">buy_list</span>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-num">Phase 4</div>
+      <div class="phase-title">Dashboard + Polish</div>
+      <p>Unified /dashboard endpoint. History views per task. Split summary per consumable entry. Presence management UI. Admin tools for group assignment and reactivation. Mobile-first frontend.</p>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+        <span class="tag">/dashboard</span>
+        <span class="tag">Frontend (React Native / Flutter / PWA)</span>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <h3>Recommended Stack</h3>
+  <div class="grid-3" style="margin-top:16px;">
+    <div class="scenario">
+      <div class="scenario-title">Backend</div>
+      <p><strong>Spring Boot (Java/Kotlin)</strong> — clean service/repository separation. RotationEngine becomes a @Service bean. Each task type has its own @Service that delegates to the engine.</p>
+      <p>Or: <strong>Node.js + Express + TypeScript</strong> if you prefer JS ecosystem.</p>
+    </div>
+    <div class="scenario">
+      <div class="scenario-title">Database</div>
+      <p><strong>PostgreSQL</strong> — JSON columns for rotation arrays, solid FK support, easy migration with Flyway / Liquibase.</p>
+      <p>SQLite is fine for a local prototype — swap to Postgres for multi-device access.</p>
+    </div>
+    <div class="scenario">
+      <div class="scenario-title">Frontend</div>
+      <p><strong>React Native</strong> for a shared iOS/Android app. Or a <strong>PWA (React + Vite)</strong> — everyone opens it in browser, no app store needed.</p>
+      <p>A shared dashboard everyone can open is sufficient — no push notifications for MVP.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== QUICK REFERENCE ===== -->
+<section class="section" id="ref">
+  <div class="section-header">
+    <span class="section-num">12</span>
+    <h2>Quick Reference</h2>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <h3>Which engine does each task use?</h3>
+      <table class="spec-table">
+        <thead><tr><th>Task</th><th>Engine</th><th>Override?</th><th>Group-aware?</th></tr></thead>
+        <tbody>
+          <tr><td>🍳 Cooking</td><td>Group Rotation Engine</td><td>✅ Yes</td><td>✅ 11 group states</td></tr>
+          <tr><td>🗑️ Trash</td><td>Load-balance sort (wet+dry)</td><td>❌ No override</td><td>❌ Single state</td></tr>
+          <tr><td>🚿 Washroom</td><td>Washroom variant</td><td>❌ No</td><td>Fixed groups</td></tr>
+          <tr><td>💧 Water</td><td>Load-balance sort</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>🥚 Consumables</td><td>No engine (ledger)</td><td>N/A</td><td>N/A</td></tr>
+          <tr><td>🛒 Buy List</td><td>No engine (CRUD)</td><td>N/A</td><td>N/A</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3>Eligibility rule per module</h3>
+      <table class="spec-table">
+        <thead><tr><th>Module</th><th>Who is eligible?</th></tr></thead>
+        <tbody>
+          <tr><td>Cooking</td><td>ACTIVE + PRESENT</td></tr>
+          <tr><td>Trash</td><td>ACTIVE + PRESENT</td></tr>
+          <tr><td>Washroom</td><td>ACTIVE + PRESENT (within group only)</td></tr>
+          <tr><td>Water</td><td>ACTIVE + PRESENT (min 2 required)</td></tr>
+          <tr><td>Consumables</td><td>Any ACTIVE user can log usage</td></tr>
+          <tr><td>Buy List</td><td>Any ACTIVE user</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <h3 style="margin-top:36px;">Override sequence mutation — visual summary</h3>
+  <div class="scenario">
+    <div class="scenario-title">B's turn, D overrides → sequence mutates for this cycle only</div>
+    <div style="display:flex; gap:32px; flex-wrap:wrap; align-items:center;">
+      <div>
+        <p style="font-size:11px; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.1em;">Original order</p>
+        <div class="flow">
+          <div class="flow-item"><div class="flow-person done">A</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-item"><div class="flow-person active">B</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-item"><div class="flow-person">C</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-item"><div class="flow-person">D</div></div>
+        </div>
+      </div>
+      <div style="color:var(--accent); font-size:24px;">⟶</div>
+      <div>
+        <p style="font-size:11px; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.1em;">This cycle (D overrides B)</p>
+        <div class="flow">
+          <div class="flow-item"><div class="flow-person done">A</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-item"><div class="flow-person override">D</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-item"><div class="flow-person active">B</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-item"><div class="flow-person">C</div></div>
+        </div>
+      </div>
+      <div style="color:var(--accent); font-size:24px;">⟶</div>
+      <div>
+        <p style="font-size:11px; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.1em;">Next cycle (full reset)</p>
+        <div class="flow">
+          <div class="flow-item"><div class="flow-person active">A</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-item"><div class="flow-person">B</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-item"><div class="flow-person">C</div></div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-item"><div class="flow-person">D</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="footer-brand">2BHK Task Manager</div>
+  <div>Full Project Specification · 4 Phases · 6 Modules · 1 Reusable Engine</div>
+  <div>Built for A, B, C, D 🏠</div>
+</footer>
+
+</body>
+</html>

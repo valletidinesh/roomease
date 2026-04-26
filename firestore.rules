@@ -1,0 +1,92 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Any authenticated user who has a document under rooms/{roomId}/users/{uid}
+    // is a household member of that room.
+    function isMember(roomId) {
+      return request.auth != null &&
+             exists(/databases/$(database)/documents/rooms/$(roomId)/users/$(request.auth.uid));
+    }
+
+    function isAdmin(roomId) {
+      return isMember(roomId) &&
+             get(/databases/$(database)/documents/rooms/$(roomId)).data.adminUid == request.auth.uid;
+    }
+
+    // ── Room document ──────────────────────────────────────────────────────
+    match /rooms/{roomId} {
+      // Anyone authenticated can read the room (needed for join-by-invite-code query)
+      allow read: if request.auth != null;
+      // Only members can update; only admin can delete
+      allow create: if request.auth != null;
+      allow update: if isMember(roomId);
+      allow delete: if isAdmin(roomId);
+
+      // ── Users subcollection ──────────────────────────────────────────────
+      match /users/{userId} {
+        allow read: if isMember(roomId);
+        // A user can update themselves; admin can update anyone
+        allow write: if isMember(roomId) &&
+                        (request.auth.uid == userId || isAdmin(roomId));
+      }
+
+      // ── Rotation state ───────────────────────────────────────────────────
+      match /groupRotationState/{groupKey} {
+        allow read, write: if isMember(roomId);
+      }
+
+      // ── History collections (append-only writes) ─────────────────────────
+      match /cookingHistory/{docId} {
+        allow read: if isMember(roomId);
+        allow create: if isMember(roomId);
+        allow delete: if isMember(roomId); // for 3-cycle pruning
+        allow update: if false; // history is immutable
+      }
+
+      match /trashHistory/{docId} {
+        allow read: if isMember(roomId);
+        allow create: if isMember(roomId);
+        allow update: if false;
+        allow delete: if false;
+      }
+
+      match /waterHistory/{docId} {
+        allow read: if isMember(roomId);
+        allow create: if isMember(roomId);
+        allow update: if false;
+        allow delete: if false;
+      }
+
+      // ── Washroom state ────────────────────────────────────────────────────
+      match /washroomState/{number} {
+        allow read, write: if isMember(roomId);
+      }
+
+      // ── Consumables ───────────────────────────────────────────────────────
+      match /purchaseEntries/{entryId} {
+        allow read: if isMember(roomId);
+        allow create: if isMember(roomId);
+        allow update: if isMember(roomId);
+        allow delete: if isAdmin(roomId);
+      }
+
+      match /usageLogs/{logId} {
+        allow read: if isMember(roomId);
+        allow create: if isMember(roomId);
+        allow update: if false;
+        allow delete: if false;
+      }
+
+      // ── Buy list ──────────────────────────────────────────────────────────
+      match /buyList/{itemId} {
+        allow read: if isMember(roomId);
+        allow create: if isMember(roomId);
+        allow update: if isMember(roomId);
+        // Only the person who added it can delete it
+        allow delete: if isMember(roomId) &&
+                         resource.data.addedBy == request.auth.uid;
+      }
+    }
+  }
+}

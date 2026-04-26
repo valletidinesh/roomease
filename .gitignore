@@ -1,0 +1,46 @@
+# ─── SENSITIVE — NEVER commit these ──────────────────────────────────────────
+# Contains SUPABASE_URL and SUPABASE_ANON_KEY
+android/local.properties
+
+# Android keystore files (signing keys)
+*.jks
+*.keystore
+android/app/keystore/
+release-keystore.jks
+
+# Google services (Firebase — not used anymore, but just in case)
+android/app/google-services.json
+
+# Environment / secrets files
+.env
+.env.*
+secrets.properties
+
+# ─── Android ──────────────────────────────────────────────────────────────────
+# Build outputs
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+android/.idea/
+android/**/*.iml
+android/.DS_Store
+
+# Kotlin incremental compilation
+android/app/src/main/kotlin/
+
+# Lint
+android/app/lint-results*
+
+# ─── IDE ──────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ─── OS ───────────────────────────────────────────────────────────────────────
+desktop.ini

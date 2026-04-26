@@ -1,0 +1,14 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# local.properties.example
+#
+# Copy this file to local.properties and fill in your real values.
+# local.properties is GITIGNORED — never commit real credentials.
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Android SDK location — Android Studio fills this in automatically
+sdk.dir=C\:\\Users\\YourName\\AppData\\Local\\Android\\Sdk
+
+# Supabase project credentials
+# Get these from: https://supabase.com → your project → Settings → API
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=sb_publishable_XXXXXXXXXXXXXXXXXXXX
