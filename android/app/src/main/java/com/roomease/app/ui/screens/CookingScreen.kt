@@ -149,7 +149,22 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CookingCalendarScreen(onBack: () -> Unit) {
+fun CookingCalendarScreen(
+    roomViewModel: RoomViewModel,
+    onBack: () -> Unit
+) {
+    val room by roomViewModel.room.collectAsState()
+    val me by roomViewModel.currentUser.collectAsState()
+    val cookingRepo = remember { com.roomease.app.data.repository.CookingRepository() }
+    
+    // We listen to cooking history for the user's washroom group
+    val history by produceState<List<com.roomease.app.data.model.CookingHistory>>(initialValue = emptyList(), key1 = room, key2 = me) {
+        if (room != null && me != null) {
+            cookingRepo.listenToCookingHistory(room!!.id, me!!.washroomGroup).collect {
+                value = it
+            }
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -161,8 +176,36 @@ fun CookingCalendarScreen(onBack: () -> Unit) {
             )
         }
     ) { padding ->
-        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(padding), contentAlignment = Alignment.Center) {
-            Text("History loads here (real-time from Firestore)", color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(padding)) {
+            if (history.isEmpty()) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("No cooking history yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(history) { entry ->
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Box(Modifier.size(40.dp).clip(CircleShape).background(com.roomease.app.ui.theme.CookingColor.copy(0.15f)), contentAlignment = Alignment.Center) {
+                                    Text("🍳")
+                                }
+                                Spacer(Modifier.width(16.dp))
+                                Column {
+                                    Text("Cooked by: ${entry.cookedByName}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                    Text(entry.dateStr, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
