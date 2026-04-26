@@ -27,9 +27,19 @@ jobs:
         echo "SUPABASE_ANON_KEY=sb_publishable_BUFAIZt-Aumk5_3rxjzVYw_M8DQtxgD" >> android/local.properties
 
     - name: Build Debug APK
-      run: cd android && gradle assembleDebug
+      run: cd android && gradle assembleDebug > build_log.txt 2>&1
+
+    - name: Commit build log
+      if: failure()
+      run: |
+        git config user.name "GitHub Action"
+        git config user.email "action@github.com"
+        git add android/build_log.txt
+        git commit -m "chore: add build log on failure"
+        git push
 
     - name: Upload APK
+      if: success()
       uses: actions/upload-artifact@v4
       with:
         name: RoomEase-APK
