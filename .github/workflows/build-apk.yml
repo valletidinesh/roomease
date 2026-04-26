@@ -29,14 +29,12 @@ jobs:
     - name: Build Debug APK
       run: cd android && gradle assembleDebug > build_log.txt 2>&1
 
-    - name: Commit build log
+    - name: Upload Build Log
       if: failure()
-      run: |
-        git config user.name "GitHub Action"
-        git config user.email "action@github.com"
-        git add android/build_log.txt
-        git commit -m "chore: add build log on failure"
-        git push
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-error-log
+        path: android/build_log.txt
 
     - name: Upload APK
       if: success()
