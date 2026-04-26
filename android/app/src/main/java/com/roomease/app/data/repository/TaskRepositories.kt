@@ -13,6 +13,7 @@ import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TrashRepository
@@ -56,7 +57,7 @@ class TrashRepository {
         val channel = db.realtime.channel("trash-$roomId")
         val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "trash_history"
-            filter { eq("room_id", roomId) }
+            filter("room_id", FilterOperator.EQ, roomId)
         }
         channel.subscribe()
         
@@ -86,7 +87,7 @@ class WashroomRepository {
         val channel = db.realtime.channel("washroom-$roomId-$washroomNumber")
         val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "washroom_state"
-            filter { eq("room_id", roomId) }
+            filter("room_id", FilterOperator.EQ, roomId)
         }
         channel.subscribe()
         emit(getWashroomState(roomId, washroomNumber))
@@ -104,7 +105,7 @@ class WashroomRepository {
     suspend fun refreshStatus(roomId: String, washroomNumber: Int, users: List<User>) {
         val state = getWashroomState(roomId, washroomNumber)
         val newStatus = WashroomEngine.computeStatus(state, users)
-        if (newStatus.name != state.status) {
+        if (newStatus != state.status) {
             db.from("washroom_state").update(mapOf("status" to newStatus.name)) {
                 filter { eq("room_id", roomId); eq("washroom_number", washroomNumber) }
             }
@@ -145,7 +146,7 @@ class WaterRepository {
         val channel = db.realtime.channel("water-$roomId")
         val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "water_history"
-            filter { eq("room_id", roomId) }
+            filter("room_id", FilterOperator.EQ, roomId)
         }
         channel.subscribe()
         

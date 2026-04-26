@@ -14,6 +14,7 @@ import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -115,7 +116,7 @@ class RoomRepository {
         val channel = db.realtime.channel("users-$roomId")
         val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "users"
-            filter { eq("room_id", roomId) }
+            filter("room_id", FilterOperator.EQ, roomId)
         }
 
         // Subscribe in background
