@@ -303,7 +303,7 @@ private fun AddMembersStep(members: MutableList<MemberDraft>, onNext: () -> Unit
                         OutlinedButton(
                             onClick = {
                                 if (newName.isBlank()) { errorMsg = "Name is required"; return@OutlinedButton }
-                                val uid = "pending_${System.currentTimeMillis()}"
+                                val uid = java.util.UUID.randomUUID().toString()
                                 members.add(MemberDraft(uid, newName.trim(), newEmail.trim()))
                                 newName = ""; newEmail = ""
                             },
