@@ -96,7 +96,7 @@ fun LoginScreen(
 
         OutlinedTextField(
             value = email, onValueChange = { email = it; errorMsg = null },
-            label = { Text("Email") }, leadingIcon = { Icon(Icons.Filled.Email, null) },
+            label = { Text("Email / User") }, leadingIcon = { Icon(Icons.Filled.Email, null) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
         )
