@@ -13,7 +13,7 @@ import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -111,18 +111,19 @@ class RoomRepository {
      * Real-time listener for user list changes.
      * Supabase Realtime broadcasts row-level changes via PostgreSQL logical replication.
      */
-    fun listenToUsers(roomId: String): Flow<List<User>> {
+    fun listenToUsers(roomId: String): Flow<List<User>> = flow {
         val channel = db.realtime.channel("users-$roomId")
-        val flow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+        val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "users"
-            filter = "room_id=eq.$roomId"
+            filter { eq("room_id", roomId) }
         }
 
         // Subscribe in background
         channel.subscribe()
+        emit(getUsers(roomId))
 
         // On any change, re-fetch the full list
-        return flow.map { getUsers(roomId) }
+        changes.collect { emit(getUsers(roomId)) }
     }
 
     suspend fun updatePresence(roomId: String, userId: String, presence: String) {
@@ -151,8 +152,8 @@ class RoomRepository {
     private fun generateAllGroupStates(
         roomId: String,
         masterOrder: List<String>,
-    ): List<Map<String, Any>> {
-        val result = mutableListOf<Map<String, Any>>()
+    ): List<Map<String, Any?>> {
+        val result = mutableListOf<Map<String, Any?>>()
         val n = masterOrder.size
         for (mask in 1 until (1 shl n)) {
             val group = masterOrder.filterIndexed { i, _ -> (mask shr i) and 1 == 1 }

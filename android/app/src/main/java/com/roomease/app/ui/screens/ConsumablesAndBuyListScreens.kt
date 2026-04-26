@@ -21,6 +21,7 @@ import com.roomease.app.SupabaseClient
 import com.roomease.app.data.model.BuyStatus
 import com.roomease.app.ui.theme.*
 import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.launch
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ConsumablesScreen
@@ -194,7 +195,7 @@ fun BuyListScreen() {
                     name = name,
                     status = status,
                     onMarkBought = { /* markBought */ },
-                    onDelete = { items.removeIf { it.first == name } },
+                    onDelete = { items.removeAll { it.first == name } },
                 )
             }
             item { Spacer(Modifier.height(80.dp)) }

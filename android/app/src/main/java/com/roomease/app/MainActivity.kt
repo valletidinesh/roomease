@@ -18,8 +18,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+
 import com.roomease.app.ui.navigation.Screen
 import com.roomease.app.ui.navigation.bottomNavItems
 import com.roomease.app.ui.screens.*
@@ -31,7 +30,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RoomEaseTheme {
-                RoomEaseApp()
+                RoomEaseMainApp()
             }
         }
     }
@@ -39,7 +38,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RoomEaseApp() {
+fun RoomEaseMainApp() {
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route

@@ -22,7 +22,7 @@ object WaterPairSelector {
         val sorted = eligible.sortedWith(
             compareBy(
                 { it.waterFetchCount },
-                { it.lastFetchedAt?.toDate()?.time ?: 0L },
+                { it.lastFetchedAt ?: "" },
             )
         )
         return Pair(sorted[0], sorted[1])

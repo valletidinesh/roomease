@@ -12,7 +12,7 @@ import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flow
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TrashRepository
@@ -52,18 +52,21 @@ class TrashRepository {
         )
     }
 
-    fun listenToTrashHistory(roomId: String): Flow<List<TrashHistory>> {
+    fun listenToTrashHistory(roomId: String): Flow<List<TrashHistory>> = flow {
         val channel = db.realtime.channel("trash-$roomId")
-        val flow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+        val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "trash_history"
-            filter = "room_id=eq.$roomId"
+            filter { eq("room_id", roomId) }
         }
         channel.subscribe()
-        return flow.map {
+        
+        val fetch = suspend {
             db.from("trash_history")
                 .select { filter { eq("room_id", roomId) }; order("thrown_at", Order.DESCENDING); limit(30) }
-                .decodeList()
+                .decodeList<TrashHistory>()
         }
+        emit(fetch())
+        changes.collect { emit(fetch()) }
     }
 }
 
@@ -79,14 +82,15 @@ class WashroomRepository {
             .decodeSingle()
     }
 
-    fun listenToWashroomState(roomId: String, washroomNumber: Int): Flow<WashroomState> {
+    fun listenToWashroomState(roomId: String, washroomNumber: Int): Flow<WashroomState> = flow {
         val channel = db.realtime.channel("washroom-$roomId-$washroomNumber")
-        val flow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+        val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "washroom_state"
-            filter = "room_id=eq.$roomId"
+            filter { eq("room_id", roomId) }
         }
         channel.subscribe()
-        return flow.map { getWashroomState(roomId, washroomNumber) }
+        emit(getWashroomState(roomId, washroomNumber))
+        changes.collect { emit(getWashroomState(roomId, washroomNumber)) }
     }
 
     suspend fun markCleaned(roomId: String, washroomNumber: Int) {
@@ -137,17 +141,20 @@ class WaterRepository {
         )
     }
 
-    fun listenToWaterHistory(roomId: String): Flow<List<WaterHistory>> {
+    fun listenToWaterHistory(roomId: String): Flow<List<WaterHistory>> = flow {
         val channel = db.realtime.channel("water-$roomId")
-        val flow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+        val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "water_history"
-            filter = "room_id=eq.$roomId"
+            filter { eq("room_id", roomId) }
         }
         channel.subscribe()
-        return flow.map {
+        
+        val fetch = suspend {
             db.from("water_history")
                 .select { filter { eq("room_id", roomId) }; order("fetched_at", Order.DESCENDING); limit(20) }
-                .decodeList()
+                .decodeList<WaterHistory>()
         }
+        emit(fetch())
+        changes.collect { emit(fetch()) }
     }
 }

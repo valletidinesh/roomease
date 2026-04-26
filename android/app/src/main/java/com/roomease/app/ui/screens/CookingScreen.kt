@@ -15,8 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
+import com.roomease.app.SupabaseClient
+import io.github.jan.supabase.auth.auth
 import com.roomease.app.data.model.GroupRotationState
 import com.roomease.app.data.model.User
 import com.roomease.app.data.model.isEligible
@@ -119,8 +119,10 @@ fun CookingScreen(onNavigateToCalendar: () -> Unit) {
             // Mark done (self)
             Button(
                 onClick = {
-                    val uid = Firebase.auth.currentUser?.uid ?: return@Button
-                    successMsg = "Cooking marked done! 🎉"
+                    scope.launch {
+                        val uid = SupabaseClient.client.auth.currentUserOrNull()?.id ?: return@launch
+                        successMsg = "Cooking marked done! 🎉"
+                    }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(14.dp),
@@ -145,6 +147,7 @@ fun CookingScreen(onNavigateToCalendar: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CookingCalendarScreen(onBack: () -> Unit) {
     Scaffold(

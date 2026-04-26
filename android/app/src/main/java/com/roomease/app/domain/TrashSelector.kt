@@ -26,7 +26,7 @@ object TrashSelector {
             compareBy(
                 { it.completeTurns },
                 { if (trashType == TrashType.WET) it.trashWetCount else it.trashDryCount },
-                { it.lastTrashAt?.toDate()?.time ?: 0L },
+                { it.lastTrashAt ?: "" },
             )
         ).first()
     }

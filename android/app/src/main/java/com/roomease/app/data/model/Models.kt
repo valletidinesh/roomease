@@ -45,6 +45,8 @@ data class TrashHistory(
 
 enum class TrashType { WET, DRY }
 
+enum class WashroomStatus { ACTIVE, PENDING_RESUME }
+
 /** `washroom_state` table */
 @Serializable
 data class WashroomState(
@@ -53,7 +55,7 @@ data class WashroomState(
     @SerialName("washroom_number")  val washroomNumber: Int = 1,
     @SerialName("group_order")      val groupOrder: List<String> = emptyList(),
     @SerialName("cycle_index")      val cycleIndex: Int = 0,
-    val status: String = "ACTIVE",   // "ACTIVE" | "PENDING_RESUME"
+    val status: WashroomStatus = WashroomStatus.ACTIVE,
 )
 
 /** `water_history` table */
@@ -90,6 +92,8 @@ data class UsageLog(
     @SerialName("logged_at")          val loggedAt: String? = null,
 )
 
+enum class BuyStatus { PENDING, BOUGHT }
+
 /** `buy_list` table */
 @Serializable
 data class BuyListItem(
@@ -98,7 +102,7 @@ data class BuyListItem(
     @SerialName("item_name")  val itemName: String = "",
     @SerialName("added_by")   val addedBy: String = "",
     @SerialName("added_at")   val addedAt: String? = null,
-    val status: String = "PENDING",  // "PENDING" | "BOUGHT"
+    val status: BuyStatus = BuyStatus.PENDING,
     @SerialName("bought_by")  val boughtBy: String? = null,
     @SerialName("bought_at")  val boughtAt: String? = null,
 )

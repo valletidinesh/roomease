@@ -12,7 +12,7 @@ import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flow
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ConsumablesRepository
@@ -20,14 +20,15 @@ import kotlinx.coroutines.flow.map
 class ConsumablesRepository {
     private val db get() = SupabaseClient.client
 
-    fun listenToOpenEntries(roomId: String): Flow<List<PurchaseEntry>> {
+    fun listenToOpenEntries(roomId: String): Flow<List<PurchaseEntry>> = flow {
         val channel = db.realtime.channel("consumables-$roomId")
-        val flow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+        val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "purchase_entries"
-            filter = "room_id=eq.$roomId"
+            filter { eq("room_id", roomId) }
         }
         channel.subscribe()
-        return flow.map { getOpenEntries(roomId) }
+        emit(getOpenEntries(roomId))
+        changes.collect { emit(getOpenEntries(roomId)) }
     }
 
     suspend fun getOpenEntries(roomId: String): List<PurchaseEntry> {
@@ -105,14 +106,15 @@ class ConsumablesRepository {
 class BuyListRepository {
     private val db get() = SupabaseClient.client
 
-    fun listenToBuyList(roomId: String): Flow<List<BuyListItem>> {
+    fun listenToBuyList(roomId: String): Flow<List<BuyListItem>> = flow {
         val channel = db.realtime.channel("buylist-$roomId")
-        val flow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+        val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "buy_list"
-            filter = "room_id=eq.$roomId"
+            filter { eq("room_id", roomId) }
         }
         channel.subscribe()
-        return flow.map { getBuyList(roomId) }
+        emit(getBuyList(roomId))
+        changes.collect { emit(getBuyList(roomId)) }
     }
 
     suspend fun getBuyList(roomId: String): List<BuyListItem> {

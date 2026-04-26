@@ -12,7 +12,8 @@ import io.github.jan.supabase.realtime.channel
 import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flow
+import com.roomease.app.data.model.isEligible
 
 class CookingRepository {
 
@@ -26,14 +27,15 @@ class CookingRepository {
             .decodeSingle()
     }
 
-    fun listenToGroupState(roomId: String, groupKey: String): Flow<GroupRotationState> {
+    fun listenToGroupState(roomId: String, groupKey: String): Flow<GroupRotationState> = flow {
         val channel = db.realtime.channel("cooking-$roomId-$groupKey")
-        val flow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+        val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "group_rotation_state"
-            filter = "room_id=eq.$roomId"
+            filter { eq("room_id", roomId) }
         }
         channel.subscribe()
-        return flow.map { getGroupState(roomId, groupKey) }
+        emit(getGroupState(roomId, groupKey))
+        changes.collect { emit(getGroupState(roomId, groupKey)) }
     }
 
     fun buildGroupKey(users: List<User>, masterOrder: List<String>): String {
@@ -109,14 +111,15 @@ class CookingRepository {
             .decodeList()
     }
 
-    fun listenToHistory(roomId: String, groupKey: String): Flow<List<CookingHistory>> {
+    fun listenToHistory(roomId: String, groupKey: String): Flow<List<CookingHistory>> = flow {
         val channel = db.realtime.channel("cooking-history-$roomId")
-        val flow = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
+        val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "cooking_history"
-            filter = "room_id=eq.$roomId"
+            filter { eq("room_id", roomId) }
         }
         channel.subscribe()
-        return flow.map { getCookingHistory(roomId, groupKey) }
+        emit(getCookingHistory(roomId, groupKey))
+        changes.collect { emit(getCookingHistory(roomId, groupKey)) }
     }
 
     // ── Pruning ───────────────────────────────────────────────────────────────
