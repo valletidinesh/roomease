@@ -26,6 +26,8 @@ import com.roomease.app.ui.theme.RoomEaseTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.roomease.app.ui.viewmodel.RoomViewModel
 import kotlinx.coroutines.flow.collectLatest
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.status.SessionStatus
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -48,8 +50,8 @@ fun RoomEaseMainApp() {
     val currentRoute = currentBackStack?.destination?.route
 
     LaunchedEffect(Unit) {
-        io.github.jan.supabase.auth.auth(com.roomease.app.SupabaseClient.client).sessionStatus.collectLatest { status ->
-            if (status is io.github.jan.supabase.auth.status.SessionStatus.NotAuthenticated) {
+        com.roomease.app.SupabaseClient.client.auth.sessionStatus.collectLatest { status ->
+            if (status is SessionStatus.NotAuthenticated) {
                 navController.navigate(Screen.Login.route) {
                     popUpTo(0)
                 }
