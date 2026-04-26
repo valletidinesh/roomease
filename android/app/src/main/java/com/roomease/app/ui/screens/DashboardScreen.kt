@@ -36,7 +36,7 @@ fun DashboardScreen(onNavigateTo: (Screen) -> Unit) {
             .verticalScroll(rememberScrollState())
     ) {
         // Header
-        DashboardHeader()
+        DashboardHeader(onNavigateTo)
 
         Spacer(Modifier.height(8.dp))
 
@@ -101,7 +101,7 @@ fun DashboardScreen(onNavigateTo: (Screen) -> Unit) {
 }
 
 @Composable
-private fun DashboardHeader() {
+private fun DashboardHeader(onNavigateTo: (Screen) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -122,7 +122,7 @@ private fun DashboardHeader() {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
-        IconButton(onClick = { /* navigate to settings */ }) {
+        IconButton(onClick = { onNavigateTo(Screen.Settings) }) {
             Icon(Icons.Filled.Settings, "Settings", tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
