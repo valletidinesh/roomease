@@ -17,10 +17,9 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x android/gradlew
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
 
     - name: Create local.properties
       run: |
@@ -28,7 +27,7 @@ jobs:
         echo "SUPABASE_ANON_KEY=sb_publishable_BUFAIZt-Aumk5_3rxjzVYw_M8DQtxgD" >> android/local.properties
 
     - name: Build Debug APK
-      run: cd android && ./gradlew assembleDebug
+      run: cd android && gradle assembleDebug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
