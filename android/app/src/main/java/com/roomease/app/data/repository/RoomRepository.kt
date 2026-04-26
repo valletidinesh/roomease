@@ -102,6 +102,12 @@ class RoomRepository {
 
     // ── Users ─────────────────────────────────────────────────────────────────
 
+    suspend fun getUser(uid: String): User? {
+        return db.from("users")
+            .select { filter { eq("uid", uid) } }
+            .decodeSingleOrNull<User>()
+    }
+
     suspend fun getUsers(roomId: String): List<User> {
         return db.from("users")
             .select { filter { eq("room_id", roomId) } }

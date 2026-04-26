@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.roomease.app.ui.navigation.Screen
 import com.roomease.app.ui.theme.*
+import com.roomease.app.ui.viewmodel.RoomViewModel
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DashboardScreen — home screen showing quick status of all 6 modules
@@ -28,7 +29,11 @@ import com.roomease.app.ui.theme.*
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-fun DashboardScreen(onNavigateTo: (Screen) -> Unit) {
+fun DashboardScreen(
+    roomViewModel: RoomViewModel,
+    onNavigateTo: (Screen) -> Unit
+) {
+    val me by roomViewModel.currentUser.collectAsState()
     Column(
         Modifier
             .fillMaxSize()
@@ -36,7 +41,10 @@ fun DashboardScreen(onNavigateTo: (Screen) -> Unit) {
             .verticalScroll(rememberScrollState())
     ) {
         // Header
-        DashboardHeader(onNavigateTo)
+        DashboardHeader(
+            userName = me?.name,
+            onNavigateTo = onNavigateTo
+        )
 
         Spacer(Modifier.height(8.dp))
 
@@ -101,7 +109,7 @@ fun DashboardScreen(onNavigateTo: (Screen) -> Unit) {
 }
 
 @Composable
-private fun DashboardHeader(onNavigateTo: (Screen) -> Unit) {
+private fun DashboardHeader(userName: String?, onNavigateTo: (Screen) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -117,7 +125,7 @@ private fun DashboardHeader(onNavigateTo: (Screen) -> Unit) {
                 fontWeight = FontWeight.ExtraBold,
             )
             Text(
-                "Good evening 🌙",
+                "Good evening, ${userName ?: "Roommate"} 🌙",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

@@ -22,14 +22,14 @@ import com.roomease.app.data.model.User
 import com.roomease.app.data.model.isEligible
 import com.roomease.app.data.repository.CookingRepository
 import com.roomease.app.data.repository.RoomRepository
-import com.roomease.app.domain.RotationEngine
 import com.roomease.app.ui.theme.CookingColor
 import com.roomease.app.ui.theme.Primary
 import kotlinx.coroutines.launch
+import com.roomease.app.ui.viewmodel.RoomViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CookingScreen(onNavigateToCalendar: () -> Unit) {
+fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit) {
     val scope = rememberCoroutineScope()
     val cookingRepo = remember { CookingRepository() }
     val roomRepo = remember { RoomRepository() }

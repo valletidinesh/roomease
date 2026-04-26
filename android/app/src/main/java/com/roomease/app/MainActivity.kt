@@ -23,6 +23,8 @@ import com.roomease.app.ui.navigation.Screen
 import com.roomease.app.ui.navigation.bottomNavItems
 import com.roomease.app.ui.screens.*
 import com.roomease.app.ui.theme.RoomEaseTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.roomease.app.ui.viewmodel.RoomViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +41,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoomEaseMainApp() {
+    val roomViewModel: RoomViewModel = viewModel()
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
@@ -118,11 +121,13 @@ fun RoomEaseMainApp() {
             }
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
+                    roomViewModel = roomViewModel,
                     onNavigateTo = { navController.navigate(it.route) }
                 )
             }
             composable(Screen.Cooking.route) {
                 CookingScreen(
+                    roomViewModel = roomViewModel,
                     onNavigateToCalendar = { navController.navigate(Screen.CookingCalendar.route) }
                 )
             }
@@ -130,22 +135,25 @@ fun RoomEaseMainApp() {
                 CookingCalendarScreen(onBack = { navController.popBackStack() })
             }
             composable(Screen.Trash.route) {
-                TrashScreen()
+                TrashScreen(roomViewModel)
             }
             composable(Screen.Washroom.route) {
-                WashroomScreen()
+                WashroomScreen(roomViewModel)
             }
             composable(Screen.Water.route) {
-                WaterScreen()
+                WaterScreen(roomViewModel)
             }
             composable(Screen.Consumables.route) {
-                ConsumablesScreen()
+                ConsumablesScreen(roomViewModel)
             }
             composable(Screen.BuyList.route) {
-                BuyListScreen()
+                BuyListScreen(roomViewModel)
             }
             composable(Screen.Settings.route) {
-                SettingsScreen(onBack = { navController.popBackStack() })
+                SettingsScreen(
+                    roomViewModel = roomViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }

@@ -15,13 +15,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.roomease.app.data.model.TrashType
 import com.roomease.app.ui.theme.*
+import com.roomease.app.ui.viewmodel.RoomViewModel
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TrashScreen
 // ─────────────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TrashScreen() {
+fun TrashScreen(roomViewModel: RoomViewModel) {
     var selectedTab by remember { mutableIntStateOf(0) }
     val tabs = listOf("WET 💧", "DRY 📦")
 
@@ -111,7 +112,7 @@ private fun TrashTypePanel(trashType: TrashType) {
 // ─────────────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WashroomScreen() {
+fun WashroomScreen(roomViewModel: RoomViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -175,7 +176,7 @@ private fun WashroomCard(number: Int) {
 // ─────────────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WaterScreen() {
+fun WaterScreen(roomViewModel: RoomViewModel) {
     var markedDone by remember { mutableStateOf(false) }
 
     Scaffold(

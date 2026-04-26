@@ -22,13 +22,14 @@ import com.roomease.app.data.model.BuyStatus
 import com.roomease.app.ui.theme.*
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.launch
+import com.roomease.app.ui.viewmodel.RoomViewModel
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ConsumablesScreen
 // ─────────────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ConsumablesScreen() {
+fun ConsumablesScreen(roomViewModel: RoomViewModel) {
     var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -160,7 +161,7 @@ private fun AddEntryDialog(onDismiss: () -> Unit, onAdd: () -> Unit) {
 // ─────────────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BuyListScreen() {
+fun BuyListScreen(roomViewModel: RoomViewModel) {
     var showAddDialog by remember { mutableStateOf(false) }
     // Placeholder items
     val items = remember {
@@ -252,9 +253,17 @@ private fun BuyListItemRow(name: String, status: BuyStatus, onMarkBought: () -> 
 // ─────────────────────────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(onBack: () -> Unit) {
+fun SettingsScreen(
+    roomViewModel: RoomViewModel,
+    onBack: () -> Unit
+) {
     val scope = rememberCoroutineScope()
-    var presence by remember { mutableStateOf(true) }
+    val room by roomViewModel.room.collectAsState()
+    val me by roomViewModel.currentUser.collectAsState()
+    val users by roomViewModel.users.collectAsState()
+    
+    // Default to true if not loaded
+    var presence by remember(me) { mutableStateOf(me?.presence == "PRESENT") }
 
     Scaffold(
         topBar = {
@@ -279,16 +288,23 @@ fun SettingsScreen(onBack: () -> Unit) {
                     Text("I'm home today", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                     Text(if (presence) "You are PRESENT — included in all rotations" else "You are AWAY — skipped in all tasks", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                Switch(checked = presence, onCheckedChange = { presence = it }, colors = SwitchDefaults.colors(checkedThumbColor = Primary, checkedTrackColor = Primary.copy(0.3f)))
+                Switch(
+                    checked = presence, 
+                    onCheckedChange = { 
+                        presence = it
+                        roomViewModel.updatePresence(it)
+                    }, 
+                    colors = SwitchDefaults.colors(checkedThumbColor = Primary, checkedTrackColor = Primary.copy(0.3f))
+                )
             }
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outline)
             Text("Room Info", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                SettingsRow(icon = Icons.Filled.Share, label = "Invite Code", value = "••••••")
-                SettingsRow(icon = Icons.Filled.People, label = "Members", value = "—")
-                SettingsRow(icon = Icons.Filled.Home, label = "Room name", value = "—")
+                SettingsRow(icon = Icons.Filled.Share, label = "Invite Code", value = room?.inviteCode ?: "••••••")
+                SettingsRow(icon = Icons.Filled.People, label = "Members", value = if (users.isEmpty()) "—" else users.joinToString(", ") { it.name })
+                SettingsRow(icon = Icons.Filled.Home, label = "Room name", value = room?.name ?: "—")
             }
 
             Spacer(Modifier.weight(1f))
