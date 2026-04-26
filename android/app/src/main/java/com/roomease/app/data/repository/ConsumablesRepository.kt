@@ -50,14 +50,14 @@ class ConsumablesRepository {
         boughtBy: String,
     ) {
         db.from("purchase_entries").insert(
-            mapOf(
-                "room_id"     to roomId,
-                "item"        to item,
-                "total_qty"   to totalQty,
-                "total_price" to totalPrice,
-                "bought_by"   to boughtBy,
-                "status"      to "OPEN",
-                "final_split" to emptyMap<String, Double>(),
+            PurchaseEntry(
+                roomId = roomId,
+                item = item,
+                totalQty = totalQty,
+                totalPrice = totalPrice,
+                boughtBy = boughtBy,
+                status = "OPEN",
+                finalSplit = emptyMap()
             )
         )
     }
@@ -74,11 +74,11 @@ class ConsumablesRepository {
         check(entry.status == "OPEN") { "Cannot log usage on a closed entry" }
 
         db.from("usage_logs").insert(
-            mapOf(
-                "room_id"          to roomId,
-                "purchase_entry_id" to entryId,
-                "user_id"          to userId,
-                "qty"              to qty,
+            UsageLog(
+                roomId = roomId,
+                purchaseEntryId = entryId,
+                userId = userId,
+                qty = qty
             )
         )
     }
@@ -97,7 +97,10 @@ class ConsumablesRepository {
         val split = ConsumableSplit.calculate(entry, logs)
 
         db.from("purchase_entries").update(
-            mapOf("status" to "CLOSED", "final_split" to split.amountsOwed)
+            {
+                set("status", "CLOSED")
+                set("final_split", split.amountsOwed)
+            }
         ) { filter { eq("id", entryId); eq("room_id", roomId) } }
     }
 }
@@ -130,11 +133,11 @@ class BuyListRepository {
 
     suspend fun addItem(roomId: String, itemName: String, addedBy: String) {
         db.from("buy_list").insert(
-            mapOf(
-                "room_id"   to roomId,
-                "item_name" to itemName,
-                "added_by"  to addedBy,
-                "status"    to "PENDING",
+            BuyListItem(
+                roomId = roomId,
+                itemName = itemName,
+                addedBy = addedBy,
+                status = com.roomease.app.data.model.BuyStatus.PENDING
             )
         )
     }

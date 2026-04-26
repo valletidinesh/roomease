@@ -24,20 +24,37 @@ class RoomViewModel : ViewModel() {
     private val _users = MutableStateFlow<List<User>>(emptyList())
     val users: StateFlow<List<User>> = _users.asStateFlow()
 
+    private val _hasNoRoom = MutableStateFlow(false)
+    val hasNoRoom: StateFlow<Boolean> = _hasNoRoom.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
     init {
         loadInitialData()
     }
 
     private fun loadInitialData() {
         viewModelScope.launch {
-            val uid = SupabaseClient.client.auth.currentUserOrNull()?.id ?: return@launch
+            val uid = SupabaseClient.client.auth.currentUserOrNull()?.id
+            if (uid == null) {
+                _isLoading.value = false
+                return@launch
+            }
             
             // Fetch current user row to get roomId
-            val me = roomRepo.getUser(uid) ?: return@launch
+            val me = roomRepo.getUser(uid)
+            if (me == null) {
+                _hasNoRoom.value = true
+                _isLoading.value = false
+                return@launch
+            }
             _currentUser.value = me
 
             // Fetch room details
             _room.value = roomRepo.getRoom(me.roomId)
+
+            _isLoading.value = false
 
             // Listen to all users in the room
             roomRepo.listenToUsers(me.roomId).collect { usersList ->

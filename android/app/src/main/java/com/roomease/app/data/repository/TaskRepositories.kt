@@ -36,20 +36,19 @@ class TrashRepository {
 
         // Update user counts
         db.from("users").update(
-            mapOf(
-                "trash_wet_count" to newWet,
-                "trash_dry_count" to newDry,
-                "last_trash_at"   to "now()",
-            )
+            {
+                set("trash_wet_count", newWet)
+                set("trash_dry_count", newDry)
+            }
         ) { filter { eq("uid", userId); eq("room_id", roomId) } }
 
         // Append history
         db.from("trash_history").insert(
-            mapOf(
-                "room_id"              to roomId,
-                "user_id"              to userId,
-                "trash_type"           to trashType.name,
-                "complete_turns_after" to completeTurnsAfter,
+            TrashHistory(
+                roomId = roomId,
+                userId = userId,
+                trashType = trashType.name,
+                completeTurnsAfter = completeTurnsAfter
             )
         )
     }
@@ -99,7 +98,10 @@ class WashroomRepository {
         val state = getWashroomState(roomId, washroomNumber)
         val newState = WashroomEngine.markDone(state)
         db.from("washroom_state").update(
-            mapOf("cycle_index" to newState.cycleIndex, "status" to newState.status)
+            {
+                set("cycle_index", newState.cycleIndex)
+                set("status", newState.status)
+            }
         ) { filter { eq("room_id", roomId); eq("washroom_number", washroomNumber) } }
     }
 
@@ -107,7 +109,9 @@ class WashroomRepository {
         val state = getWashroomState(roomId, washroomNumber)
         val newStatus = WashroomEngine.computeStatus(state, users)
         if (newStatus != state.status) {
-            db.from("washroom_state").update(mapOf("status" to newStatus.name)) {
+            db.from("washroom_state").update(
+                { set("status", newStatus.name) }
+            ) {
                 filter { eq("room_id", roomId); eq("washroom_number", washroomNumber) }
             }
         }
@@ -128,17 +132,16 @@ class WaterRepository {
 
         listOf(user1, user2).forEach { u ->
             db.from("users").update(
-                mapOf(
-                    "water_fetch_count" to u.waterFetchCount + 1,
-                    "last_fetched_at"   to "now()",
-                )
+                {
+                    set("water_fetch_count", u.waterFetchCount + 1)
+                }
             ) { filter { eq("uid", u.uid); eq("room_id", roomId) } }
         }
 
         db.from("water_history").insert(
-            mapOf(
-                "room_id"    to roomId,
-                "pair"       to listOf(user1.uid, user2.uid),
+            WaterHistory(
+                roomId = roomId,
+                pair = listOf(user1.uid, user2.uid)
             )
         )
     }

@@ -25,6 +25,7 @@ import com.roomease.app.ui.screens.*
 import com.roomease.app.ui.theme.RoomEaseTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.roomease.app.ui.viewmodel.RoomViewModel
+import kotlinx.coroutines.flow.collectLatest
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,6 +46,16 @@ fun RoomEaseMainApp() {
     val navController = rememberNavController()
     val currentBackStack by navController.currentBackStackEntryAsState()
     val currentRoute = currentBackStack?.destination?.route
+
+    LaunchedEffect(Unit) {
+        io.github.jan.supabase.auth.auth(com.roomease.app.SupabaseClient.client).sessionStatus.collectLatest { status ->
+            if (status is io.github.jan.supabase.auth.status.SessionStatus.NotAuthenticated) {
+                navController.navigate(Screen.Login.route) {
+                    popUpTo(0)
+                }
+            }
+        }
+    }
 
     val showBottomBar = currentRoute in bottomNavItems.map { it.screen.route }
 

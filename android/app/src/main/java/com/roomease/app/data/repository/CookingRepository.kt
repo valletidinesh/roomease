@@ -65,24 +65,24 @@ class CookingRepository {
 
         // Update group state
         db.from("group_rotation_state").update(
-            mapOf(
-                "current_cycle_order" to newState.currentCycleOrder,
-                "cycle_index"         to newState.cycleIndex,
-                "last_actual_user_id" to newState.lastActualUserId,
-                "current_cycle_num"   to newState.currentCycleNum,
-            )
+            {
+                set("current_cycle_order", newState.currentCycleOrder)
+                set("cycle_index", newState.cycleIndex)
+                set("last_actual_user_id", newState.lastActualUserId)
+                set("current_cycle_num", newState.currentCycleNum)
+            }
         ) { filter { eq("room_id", roomId); eq("group_key", groupKey) } }
 
         // Insert history
         db.from("cooking_history").insert(
-            mapOf(
-                "room_id"          to roomId,
-                "group_key"        to groupKey,
-                "assigned_user_id" to assigned,
-                "actual_user_id"   to actualUserId,
-                "cycle_number"     to (if (newState.cycleIndex == 0)
-                                          newState.currentCycleNum - 1
-                                      else newState.currentCycleNum),
+            CookingHistory(
+                roomId = roomId,
+                groupKey = groupKey,
+                assignedUserId = assigned,
+                actualUserId = actualUserId,
+                cycleNumber = if (newState.cycleIndex == 0)
+                                  newState.currentCycleNum - 1
+                              else newState.currentCycleNum
             )
         )
 

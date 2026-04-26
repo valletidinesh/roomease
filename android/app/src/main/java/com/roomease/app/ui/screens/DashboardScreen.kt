@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.dp
 import com.roomease.app.ui.navigation.Screen
 import com.roomease.app.ui.theme.*
 import com.roomease.app.ui.viewmodel.RoomViewModel
+import com.roomease.app.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import kotlinx.coroutines.launch
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DashboardScreen — home screen showing quick status of all 6 modules
@@ -34,6 +37,61 @@ fun DashboardScreen(
     onNavigateTo: (Screen) -> Unit
 ) {
     val me by roomViewModel.currentUser.collectAsState()
+    val hasNoRoom by roomViewModel.hasNoRoom.collectAsState()
+    val isLoading by roomViewModel.isLoading.collectAsState()
+    val scope = rememberCoroutineScope()
+
+    if (isLoading) {
+        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = Primary)
+        }
+        return
+    }
+
+    if (hasNoRoom) {
+        Column(
+            Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text("🏠", style = MaterialTheme.typography.displayLarge)
+            Spacer(Modifier.height(16.dp))
+            Text("Welcome to RoomEase", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Text("You don't belong to any room yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(32.dp))
+            
+            Button(
+                onClick = { onNavigateTo(Screen.CreateRoom) },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Filled.Add, null)
+                Spacer(Modifier.width(8.dp))
+                Text("Create a New Room", fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(16.dp))
+            OutlinedButton(
+                onClick = { onNavigateTo(Screen.JoinRoom) },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Filled.MeetingRoom, null)
+                Spacer(Modifier.width(8.dp))
+                Text("Join an Existing Room", fontWeight = FontWeight.Bold)
+            }
+            Spacer(Modifier.height(48.dp))
+            TextButton(
+                onClick = {
+                    scope.launch { SupabaseClient.client.auth.signOut() }
+                }
+            ) {
+                Text("Sign Out", color = MaterialTheme.colorScheme.error)
+            }
+        }
+        return
+    }
+
     Column(
         Modifier
             .fillMaxSize()
