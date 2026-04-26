@@ -162,7 +162,7 @@ fun CookingCalendarScreen(
     // We listen to cooking history for the user's washroom group
     val history by produceState<List<com.roomease.app.data.model.CookingHistory>>(initialValue = emptyList(), key1 = room, key2 = me) {
         if (room != null && me != null) {
-            cookingRepo.listenToHistory(room!!.id, me!!.washroomGroup).collect {
+            cookingRepo.listenToHistory(room!!.id, me!!.washroomGroup.toString()).collect {
                 value = it
             }
         }
