@@ -14,6 +14,7 @@ import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import com.roomease.app.data.model.isEligible
+import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 
 class CookingRepository {
@@ -32,7 +33,7 @@ class CookingRepository {
         val channel = db.realtime.channel("cooking-$roomId-$groupKey")
         val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "group_rotation_state"
-            filter("room_id", FilterOperator.EQ, roomId)
+            filter(FilterOperation("room_id", FilterOperator.EQ, roomId))
         }
         channel.subscribe()
         emit(getGroupState(roomId, groupKey))
@@ -116,7 +117,7 @@ class CookingRepository {
         val channel = db.realtime.channel("cooking-history-$roomId")
         val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "cooking_history"
-            filter("room_id", FilterOperator.EQ, roomId)
+            filter(FilterOperation("room_id", FilterOperator.EQ, roomId))
         }
         channel.subscribe()
         emit(getCookingHistory(roomId, groupKey))

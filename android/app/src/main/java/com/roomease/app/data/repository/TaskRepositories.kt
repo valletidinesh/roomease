@@ -13,6 +13,7 @@ import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -57,7 +58,7 @@ class TrashRepository {
         val channel = db.realtime.channel("trash-$roomId")
         val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "trash_history"
-            filter("room_id", FilterOperator.EQ, roomId)
+            filter(FilterOperation("room_id", FilterOperator.EQ, roomId))
         }
         channel.subscribe()
         
@@ -87,7 +88,7 @@ class WashroomRepository {
         val channel = db.realtime.channel("washroom-$roomId-$washroomNumber")
         val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "washroom_state"
-            filter("room_id", FilterOperator.EQ, roomId)
+            filter(FilterOperation("room_id", FilterOperator.EQ, roomId))
         }
         channel.subscribe()
         emit(getWashroomState(roomId, washroomNumber))
@@ -146,7 +147,7 @@ class WaterRepository {
         val channel = db.realtime.channel("water-$roomId")
         val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "water_history"
-            filter("room_id", FilterOperator.EQ, roomId)
+            filter(FilterOperation("room_id", FilterOperator.EQ, roomId))
         }
         channel.subscribe()
         

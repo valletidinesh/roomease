@@ -13,6 +13,7 @@ import io.github.jan.supabase.realtime.postgresChangeFlow
 import io.github.jan.supabase.realtime.realtime
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -25,7 +26,7 @@ class ConsumablesRepository {
         val channel = db.realtime.channel("consumables-$roomId")
         val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "purchase_entries"
-            filter("room_id", FilterOperator.EQ, roomId)
+            filter(FilterOperation("room_id", FilterOperator.EQ, roomId))
         }
         channel.subscribe()
         emit(getOpenEntries(roomId))
@@ -111,7 +112,7 @@ class BuyListRepository {
         val channel = db.realtime.channel("buylist-$roomId")
         val changes = channel.postgresChangeFlow<PostgresAction>(schema = "public") {
             table = "buy_list"
-            filter("room_id", FilterOperator.EQ, roomId)
+            filter(FilterOperation("room_id", FilterOperator.EQ, roomId))
         }
         channel.subscribe()
         emit(getBuyList(roomId))
