@@ -157,10 +157,12 @@ fun CookingCalendarScreen(
     val me by roomViewModel.currentUser.collectAsState()
     val cookingRepo = remember { com.roomease.app.data.repository.CookingRepository() }
     
+    val users by roomViewModel.users.collectAsState()
+    
     // We listen to cooking history for the user's washroom group
     val history by produceState<List<com.roomease.app.data.model.CookingHistory>>(initialValue = emptyList(), key1 = room, key2 = me) {
         if (room != null && me != null) {
-            cookingRepo.listenToCookingHistory(room!!.id, me!!.washroomGroup).collect {
+            cookingRepo.listenToHistory(room!!.id, me!!.washroomGroup).collect {
                 value = it
             }
         }
@@ -187,6 +189,8 @@ fun CookingCalendarScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(history) { entry ->
+                        val cookedByName = users.find { it.uid == entry.actualUserId }?.name ?: "Unknown User"
+                        val dateStr = entry.cookedAt?.substringBefore("T") ?: "Unknown Date"
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = MaterialTheme.colorScheme.surface,
@@ -198,8 +202,8 @@ fun CookingCalendarScreen(
                                 }
                                 Spacer(Modifier.width(16.dp))
                                 Column {
-                                    Text("Cooked by: ${entry.cookedByName}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                                    Text(entry.dateStr, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text("Cooked by: $cookedByName", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                                    Text(dateStr, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
                         }

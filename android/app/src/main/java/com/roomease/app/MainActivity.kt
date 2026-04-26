@@ -132,7 +132,10 @@ fun RoomEaseMainApp() {
                 )
             }
             composable(Screen.CookingCalendar.route) {
-                CookingCalendarScreen(onBack = { navController.popBackStack() })
+                CookingCalendarScreen(
+                    roomViewModel = roomViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
             composable(Screen.Trash.route) {
                 TrashScreen(roomViewModel)
