@@ -3,18 +3,22 @@ package com.roomease.app.data.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
+
 /** `group_rotation_state` table */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class GroupRotationState(
     val id: String = "",
     @SerialName("room_id")               val roomId: String = "",
     @SerialName("group_key")             val groupKey: String = "",
     /** Stored as a JSON array in Supabase, decoded by the SDK */
-    val sequence: List<String> = emptyList(),
-    @SerialName("current_cycle_order")   val currentCycleOrder: List<String> = emptyList(),
-    @SerialName("cycle_index")           val cycleIndex: Int = 0,
+    @EncodeDefault val sequence: List<String> = emptyList(),
+    @EncodeDefault @SerialName("current_cycle_order")   val currentCycleOrder: List<String> = emptyList(),
+    @EncodeDefault @SerialName("cycle_index")           val cycleIndex: Int = 0,
     @SerialName("last_actual_user_id")   val lastActualUserId: String? = null,
-    @SerialName("current_cycle_num")     val currentCycleNum: Int = 1,
+    @EncodeDefault @SerialName("current_cycle_num")     val currentCycleNum: Int = 1,
     @SerialName("updated_at")            val updatedAt: String? = null,
 )
 
@@ -33,14 +37,15 @@ data class CookingHistory(
 }
 
 /** `trash_history` table */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class TrashHistory(
     val id: String = "",
     @SerialName("room_id")                val roomId: String = "",
     @SerialName("user_id")                val userId: String = "",
-    @SerialName("trash_type")             val trashType: String = "WET",
+    @EncodeDefault @SerialName("trash_type")             val trashType: String = "WET",
     @SerialName("thrown_at")              val thrownAt: String? = null,
-    @SerialName("complete_turns_after")   val completeTurnsAfter: Int = 0,
+    @EncodeDefault @SerialName("complete_turns_after")   val completeTurnsAfter: Int = 0,
 )
 
 enum class TrashType { WET, DRY }
@@ -48,14 +53,15 @@ enum class TrashType { WET, DRY }
 enum class WashroomStatus { ACTIVE, PENDING_RESUME }
 
 /** `washroom_state` table */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 data class WashroomState(
     val id: String = "",
     @SerialName("room_id")          val roomId: String = "",
-    @SerialName("washroom_number")  val washroomNumber: Int = 1,
-    @SerialName("group_order")      val groupOrder: List<String> = emptyList(),
-    @SerialName("cycle_index")      val cycleIndex: Int = 0,
-    val status: WashroomStatus = WashroomStatus.ACTIVE,
+    @EncodeDefault @SerialName("washroom_number")  val washroomNumber: Int = 1,
+    @EncodeDefault @SerialName("group_order")      val groupOrder: List<String> = emptyList(),
+    @EncodeDefault @SerialName("cycle_index")      val cycleIndex: Int = 0,
+    @EncodeDefault val status: WashroomStatus = WashroomStatus.ACTIVE,
 )
 
 /** `water_history` table */

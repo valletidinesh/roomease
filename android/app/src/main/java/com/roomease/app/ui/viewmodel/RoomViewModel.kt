@@ -72,4 +72,11 @@ class RoomViewModel : ViewModel() {
             roomRepo.updatePresence(me.roomId, me.uid, status)
         }
     }
+
+    fun updateName(newName: String) {
+        val me = _currentUser.value ?: return
+        viewModelScope.launch {
+            roomRepo.updateUserName(me.roomId, me.uid, newName)
+        }
+    }
 }

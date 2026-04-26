@@ -144,6 +144,12 @@ class RoomRepository {
         }
     }
 
+    suspend fun updateUserName(roomId: String, userId: String, newName: String) {
+        db.from("users").update({ set("name", newName) }) {
+            filter { eq("uid", userId); eq("room_id", roomId) }
+        }
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private fun generateInviteCode(): String {

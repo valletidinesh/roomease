@@ -23,6 +23,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import com.roomease.app.SupabaseClient
 import com.roomease.app.data.model.User
 import com.roomease.app.data.repository.RoomRepository
@@ -249,9 +251,10 @@ private fun AddMembersStep(members: MutableList<MemberDraft>, onNext: () -> Unit
         if (members.isEmpty()) {
             val authUser = SupabaseClient.client.auth.currentUserOrNull()
             if (authUser != null) {
+                val metaName = authUser.userMetadata?.get("name")?.jsonPrimitive?.contentOrNull
                 members.add(MemberDraft(
                     uid = authUser.id,
-                    name = authUser.email?.substringBefore("@") ?: "Me",
+                    name = metaName ?: authUser.email?.substringBefore("@") ?: "Me",
                     email = authUser.email ?: "",
                 ))
             }

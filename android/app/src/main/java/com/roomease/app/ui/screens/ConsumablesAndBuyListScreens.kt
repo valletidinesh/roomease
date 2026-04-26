@@ -299,6 +299,43 @@ fun SettingsScreen(
             }
 
             HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outline)
+            Text("Profile", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            
+            var editedName by remember(me) { mutableStateOf(me?.name ?: "") }
+            var isEditingName by remember { mutableStateOf(false) }
+
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Person, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(12.dp))
+                    if (isEditingName) {
+                        OutlinedTextField(
+                            value = editedName,
+                            onValueChange = { editedName = it },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            textStyle = MaterialTheme.typography.bodyMedium
+                        )
+                        IconButton(onClick = { 
+                            if (editedName.isNotBlank()) {
+                                roomViewModel.updateName(editedName.trim())
+                                isEditingName = false
+                            }
+                        }) {
+                            Icon(Icons.Filled.Check, "Save", tint = Primary)
+                        }
+                    } else {
+                        Text("Name", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
+                        Text(me?.name ?: "—", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        IconButton(onClick = { isEditingName = true }) {
+                            Icon(Icons.Filled.Edit, "Edit", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+                SettingsRow(icon = Icons.Filled.Email, label = "Email", value = me?.email ?: "—")
+            }
+
+            HorizontalDivider(Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.outline)
             Text("Room Info", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {

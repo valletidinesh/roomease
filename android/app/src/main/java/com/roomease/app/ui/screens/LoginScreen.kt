@@ -24,6 +24,8 @@ import com.roomease.app.ui.theme.SurfaceVar
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 @Composable
 fun LoginScreen(
@@ -34,6 +36,7 @@ fun LoginScreen(
     val scope = rememberCoroutineScope()
     var authMode by remember { mutableStateOf(AuthMode.LOGIN) }
     var email by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
@@ -81,6 +84,15 @@ fun LoginScreen(
         }
 
         Spacer(Modifier.height(28.dp))
+        
+        if (authMode == AuthMode.REGISTER) {
+            OutlinedTextField(
+                value = name, onValueChange = { name = it; errorMsg = null },
+                label = { Text("Full Name") }, leadingIcon = { Icon(Icons.Filled.Person, null) },
+                singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp),
+            )
+            Spacer(Modifier.height(16.dp))
+        }
 
         OutlinedTextField(
             value = email, onValueChange = { email = it; errorMsg = null },
@@ -142,6 +154,11 @@ fun LoginScreen(
                                 SupabaseClient.client.auth.signUpWith(Email) {
                                     this.email = email.trim()
                                     this.password = password
+                                    this.options {
+                                        data = buildJsonObject {
+                                            put("name", name.trim())
+                                        }
+                                    }
                                 }
                                 // New user — set up or join a room
                                 onNavigateToCreateRoom()
