@@ -47,7 +47,8 @@ fun DashboardScreen(
         // Header
         DashboardHeader(
             userName = me?.name,
-            roomName = room?.name
+            roomName = room?.name,
+            onNavigateTo = onNavigateTo
         )
         Spacer(Modifier.height(8.dp))
 
@@ -112,7 +113,7 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun DashboardHeader(userName: String?, onNavigateTo: (Screen) -> Unit) {
+private fun DashboardHeader(userName: String?, roomName: String?, onNavigateTo: (Screen) -> Unit) {
     Row(
         Modifier
             .fillMaxWidth()
@@ -122,7 +123,7 @@ private fun DashboardHeader(userName: String?, onNavigateTo: (Screen) -> Unit) {
     ) {
         Column(Modifier.weight(1f)) {
             Text(
-                "RoomEase",
+                roomName ?: "RoomEase",
                 style = MaterialTheme.typography.headlineMedium,
                 color = Primary,
                 fontWeight = FontWeight.ExtraBold,
