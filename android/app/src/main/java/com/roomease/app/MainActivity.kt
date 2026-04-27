@@ -133,12 +133,20 @@ fun RoomEaseMainApp() {
             }
             composable(Screen.CreateRoom.route) {
                 CreateRoomScreen(
-                    onRoomCreated = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } } },
+                    roomViewModel = roomViewModel,
+                    onRoomCreated = { 
+                        roomViewModel.refresh()
+                        navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } } 
+                    },
                 )
             }
             composable(Screen.JoinRoom.route) {
                 JoinRoomScreen(
-                    onRoomJoined = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } } },
+                    roomViewModel = roomViewModel,
+                    onRoomJoined = { 
+                        roomViewModel.refresh()
+                        navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } } 
+                    },
                 )
             }
             composable(Screen.Home.route) {

@@ -91,13 +91,27 @@ private fun OnboardingHome(onNavigateTo: (Screen) -> Unit) {
 @Composable
 private fun RoomHome(roomViewModel: RoomViewModel, onNavigateTo: (Screen) -> Unit) {
     val me by roomViewModel.currentUser.collectAsState()
+    val users by roomViewModel.users.collectAsState()
+    val rotationStates by roomViewModel.rotationStates.collectAsState()
+    val buyList by roomViewModel.buyList.collectAsState()
+    val room by roomViewModel.room.collectAsState()
     
+    // Helper to get name of person next in rotation
+    fun getNextName(groupKey: String): String {
+        val state = rotationStates[groupKey] ?: return "Not started"
+        val order = room?.masterOrder ?: return "Unknown"
+        if (order.isEmpty()) return "No members"
+        val nextUid = order[state.cycleIndex % order.size]
+        val user = users.find { it.uid == nextUid }
+        return if (nextUid == me?.uid) "You" else user?.name ?: "Roommate"
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { 
                     Column {
-                        Text("RoomEase", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = Primary)
+                        Text(room?.name ?: "RoomEase", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.ExtraBold, color = Primary)
                         Text("Overview", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
@@ -114,7 +128,7 @@ private fun RoomHome(roomViewModel: RoomViewModel, onNavigateTo: (Screen) -> Uni
             
             StatusCard(
                 title = "Cooking",
-                subtitle = "Tonight's Chef: ${if (me?.masterOrder == 0) "You" else "Pending..."}",
+                subtitle = "Tonight's Chef: ${getNextName("COOKING")}",
                 icon = Icons.Filled.Restaurant,
                 color = CookingColor,
                 onClick = { onNavigateTo(Screen.Cooking) }
@@ -122,7 +136,7 @@ private fun RoomHome(roomViewModel: RoomViewModel, onNavigateTo: (Screen) -> Uni
             
             StatusCard(
                 title = "Trash Duty",
-                subtitle = "Next: ${me?.name ?: "Roommate"}",
+                subtitle = "Next: ${getNextName("TRASH")}",
                 icon = Icons.Filled.Delete,
                 color = TrashColor,
                 onClick = { onNavigateTo(Screen.Trash) }
@@ -130,7 +144,7 @@ private fun RoomHome(roomViewModel: RoomViewModel, onNavigateTo: (Screen) -> Uni
             
             StatusCard(
                 title = "Washroom",
-                subtitle = "Cleaning Group 1",
+                subtitle = "Cleaning Group 1", // Washroom uses a different group structure, keeping simple for now
                 icon = Icons.Filled.CleanHands,
                 color = WashroomColor,
                 onClick = { onNavigateTo(Screen.Washroom) }
@@ -148,9 +162,13 @@ private fun RoomHome(roomViewModel: RoomViewModel, onNavigateTo: (Screen) -> Uni
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                BuyListPreviewRow("Eggs", false)
-                BuyListPreviewRow("Bread", true)
-                BuyListPreviewRow("Milk", false)
+                if (buyList.isEmpty()) {
+                    Text("No items needed", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
+                    buyList.take(3).forEach { item ->
+                        BuyListPreviewRow(item.itemName, item.status == com.roomease.app.data.model.BuyStatus.BOUGHT)
+                    }
+                }
             }
             
             Spacer(Modifier.height(20.dp))

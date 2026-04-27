@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CreateRoomScreen(onRoomCreated: () -> Unit) {
+fun CreateRoomScreen(roomViewModel: com.roomease.app.ui.viewmodel.RoomViewModel, onRoomCreated: () -> Unit) {
     val scope = rememberCoroutineScope()
     val repo = remember { RoomRepository() }
 
@@ -359,7 +359,7 @@ private fun OrderRow(label: String, name: String, canMoveUp: Boolean, canMoveDow
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-fun JoinRoomScreen(onRoomJoined: () -> Unit) {
+fun JoinRoomScreen(roomViewModel: com.roomease.app.ui.viewmodel.RoomViewModel, onRoomJoined: () -> Unit) {
     val scope = rememberCoroutineScope()
     val repo = remember { RoomRepository() }
     var code by remember { mutableStateOf("") }
@@ -392,10 +392,37 @@ fun JoinRoomScreen(onRoomJoined: () -> Unit) {
             onClick = {
                 scope.launch {
                     isLoading = true; errorMsg = null
-                    val roomId = repo.joinRoomByCode(code)
-                    if (roomId != null) onRoomJoined()
-                    else errorMsg = "Room not found. Check the code and try again."
-                    isLoading = false
+                    try {
+                        val roomId = repo.joinRoomByCode(code)
+                        if (roomId != null) {
+                            val authUser = SupabaseClient.client.auth.currentUserOrNull() ?: throw IllegalStateException("Not logged in")
+                            val metaName = authUser.userMetadata?.get("name")?.jsonPrimitive?.contentOrNull
+                            val newUser = User(
+                                uid = authUser.id,
+                                email = authUser.email ?: "",
+                                name = metaName ?: authUser.email?.substringBefore("@") ?: "New User",
+                                roomId = roomId
+                            )
+                            // 1. Insert user into room
+                            SupabaseClient.client.from("users").insert(newUser)
+                            
+                            // 2. Fetch room to update master_order
+                            val currentRoom = repo.getRoom(roomId)
+                            val newOrder = currentRoom.masterOrder + authUser.id
+                            SupabaseClient.client.from("rooms").update({
+                                set("master_order", kotlinx.serialization.json.JsonArray(newOrder.map { kotlinx.serialization.json.JsonPrimitive(it) }))
+                            }) { filter { eq("id", roomId) } }
+
+                            roomViewModel.refresh()
+                            onRoomJoined()
+                        } else {
+                            errorMsg = "Room not found. Check the code and try again."
+                        }
+                    } catch (e: Exception) {
+                        errorMsg = e.message ?: "Failed to join room"
+                    } finally {
+                        isLoading = false
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(12.dp),
