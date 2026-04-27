@@ -105,46 +105,41 @@ class RoomViewModel : ViewModel() {
             // Listen to Buy List
             SupabaseClient.client.from("buy_list")
                 .selectAsFlow<com.roomease.app.data.model.BuyListItem>(
-                    com.roomease.app.data.model.BuyListItem::id,
-                    filter = { eq("room_id", me.roomId) }
-                ).onEach { list ->
-                    _buyList.value = list
+                    com.roomease.app.data.model.BuyListItem::id
+                ).onEach { list: List<com.roomease.app.data.model.BuyListItem> ->
+                    _buyList.value = list.filter { it.roomId == me.roomId }
                 }.launchIn(this)
 
             // Listen to Rotation States
             SupabaseClient.client.from("group_rotation_state")
                 .selectAsFlow<com.roomease.app.data.model.GroupRotationState>(
-                    com.roomease.app.data.model.GroupRotationState::id,
-                    filter = { eq("room_id", me.roomId) }
-                ).onEach { list ->
-                    _rotationStates.value = list.associateBy { it.groupKey }
+                    com.roomease.app.data.model.GroupRotationState::id
+                ).onEach { list: List<com.roomease.app.data.model.GroupRotationState> ->
+                    _rotationStates.value = list.filter { it.roomId == me.roomId }.associateBy { it.groupKey }
                 }.launchIn(this)
 
             // Listen to Consumables (Purchase Entries)
             SupabaseClient.client.from("purchase_entries")
                 .selectAsFlow<com.roomease.app.data.model.PurchaseEntry>(
-                    com.roomease.app.data.model.PurchaseEntry::id,
-                    filter = { eq("room_id", me.roomId) }
-                ).onEach { list ->
-                    _consumables.value = list
+                    com.roomease.app.data.model.PurchaseEntry::id
+                ).onEach { list: List<com.roomease.app.data.model.PurchaseEntry> ->
+                    _consumables.value = list.filter { it.roomId == me.roomId }
                 }.launchIn(this)
 
             // Listen to Usage Logs
             SupabaseClient.client.from("usage_logs")
                 .selectAsFlow<com.roomease.app.data.model.UsageLog>(
-                    com.roomease.app.data.model.UsageLog::id,
-                    filter = { eq("room_id", me.roomId) }
-                ).onEach { list ->
-                    _usageLogs.value = list.groupBy { it.purchaseEntryId }
+                    com.roomease.app.data.model.UsageLog::id
+                ).onEach { list: List<com.roomease.app.data.model.UsageLog> ->
+                    _usageLogs.value = list.filter { it.roomId == me.roomId }.groupBy { it.purchaseEntryId }
                 }.launchIn(this)
 
             // Listen to Washroom States
             SupabaseClient.client.from("washroom_state")
                 .selectAsFlow<com.roomease.app.data.model.WashroomState>(
-                    com.roomease.app.data.model.WashroomState::id,
-                    filter = { eq("room_id", me.roomId) }
-                ).onEach { list ->
-                    _washroomStates.value = list.associateBy { it.washroomNumber }
+                    com.roomease.app.data.model.WashroomState::id
+                ).onEach { list: List<com.roomease.app.data.model.WashroomState> ->
+                    _washroomStates.value = list.filter { it.roomId == me.roomId }.associateBy { it.washroomNumber }
                 }.launchIn(this)
         }
     }
