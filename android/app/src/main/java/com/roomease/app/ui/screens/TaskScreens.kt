@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.roomease.app.data.model.TrashType
 import com.roomease.app.ui.theme.*
 import com.roomease.app.ui.viewmodel.RoomViewModel
+import kotlinx.coroutines.launch
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TrashScreen
@@ -174,14 +175,17 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
     val washroomRepo = remember { com.roomease.app.data.repository.WashroomRepository() }
 
     val state = washroomStates[number]
-    val currentGroupId = state?.currentGroupId ?: ""
-    val membersInGroup = users.filter { it.washroomGroup == currentGroupId }
+    val groupOrder = state?.groupOrder ?: emptyList()
+    val currentGroupId = if (groupOrder.isNotEmpty() && state != null) {
+        groupOrder[state.cycleIndex % groupOrder.size]
+    } else ""
+    
+    val membersInGroup = users.filter { it.washroomGroup.toString() == currentGroupId }
     val assignedName = if (membersInGroup.isEmpty()) "—" 
         else if (membersInGroup.any { it.uid == me?.uid }) "Your Group"
         else membersInGroup.joinToString(", ") { it.name }
 
     var isLoading by remember { mutableStateOf(false) }
-    var markedDone by remember { mutableStateOf(false) }
 
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface)
@@ -207,8 +211,10 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
                     scope.launch {
                         isLoading = true
                         try {
-                            washroomRepo.markDone(room?.id ?: "", me?.uid ?: "", number)
+                            washroomRepo.markCleaned(room?.id ?: "", number)
                             roomViewModel.refresh()
+                        } catch (e: Exception) {
+                            // Error
                         } finally {
                             isLoading = false
                         }
@@ -298,9 +304,11 @@ fun WaterScreen(roomViewModel: RoomViewModel) {
                     scope.launch {
                         isLoading = true
                         try {
-                            waterRepo.markDone(room?.id ?: "", me?.uid ?: "")
+                            waterRepo.markDone(room?.id ?: "", users)
                             successMsg = "Water fetched! 💧"
                             roomViewModel.refresh()
+                        } catch (e: Exception) {
+                            // Error
                         } finally {
                             isLoading = false
                         }

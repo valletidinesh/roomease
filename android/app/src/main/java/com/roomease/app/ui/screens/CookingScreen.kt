@@ -29,6 +29,7 @@ import com.roomease.app.ui.viewmodel.RoomViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit) {
     val me by roomViewModel.currentUser.collectAsState()
     val users by roomViewModel.users.collectAsState()
     val room by roomViewModel.room.collectAsState()
@@ -97,12 +98,7 @@ import com.roomease.app.ui.viewmodel.RoomViewModel
                         color = CookingColor,
                         fontWeight = FontWeight.ExtraBold,
                     )
-                    if (groupLabel.isNotBlank()) {
-                        Spacer(Modifier.height(8.dp))
-                        Surface(shape = RoundedCornerShape(8.dp), color = CookingColor.copy(0.1f)) {
-                            Text("Group: $groupLabel", Modifier.padding(horizontal = 12.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall, color = CookingColor)
-                        }
-                    }
+
                 }
             }
 
