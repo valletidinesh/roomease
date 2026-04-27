@@ -1,6 +1,7 @@
 package com.roomease.app.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import io.github.jan.supabase.annotations.SupabaseExperimental
 import androidx.lifecycle.viewModelScope
 import com.roomease.app.SupabaseClient
 import com.roomease.app.data.model.Room
@@ -19,6 +20,7 @@ import io.github.jan.supabase.postgrest.query.filter.*
 import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 
+@OptIn(SupabaseExperimental::class)
 class RoomViewModel : ViewModel() {
     private val roomRepo = RoomRepository()
 
