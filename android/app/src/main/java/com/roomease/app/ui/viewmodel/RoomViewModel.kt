@@ -31,6 +31,15 @@ class RoomViewModel : ViewModel() {
     private val _buyList = MutableStateFlow<List<com.roomease.app.data.model.BuyListItem>>(emptyList())
     val buyList: StateFlow<List<com.roomease.app.data.model.BuyListItem>> = _buyList.asStateFlow()
 
+    private val _consumables = MutableStateFlow<List<com.roomease.app.data.model.PurchaseEntry>>(emptyList())
+    val consumables: StateFlow<List<com.roomease.app.data.model.PurchaseEntry>> = _consumables.asStateFlow()
+
+    private val _usageLogs = MutableStateFlow<Map<String, List<com.roomease.app.data.model.UsageLog>>>(emptyMap())
+    val usageLogs: StateFlow<Map<String, List<com.roomease.app.data.model.UsageLog>>> = _usageLogs.asStateFlow()
+
+    private val _washroomStates = MutableStateFlow<Map<Int, com.roomease.app.data.model.WashroomState>>(emptyMap())
+    val washroomStates: StateFlow<Map<Int, com.roomease.app.data.model.WashroomState>> = _washroomStates.asStateFlow()
+
     private val _rotationStates = MutableStateFlow<Map<String, com.roomease.app.data.model.GroupRotationState>>(emptyMap())
     val rotationStates: StateFlow<Map<String, com.roomease.app.data.model.GroupRotationState>> = _rotationStates.asStateFlow()
 
@@ -108,6 +117,36 @@ class RoomViewModel : ViewModel() {
                 ).collect { list ->
                     _rotationStates.value = list.decodeList<com.roomease.app.data.model.GroupRotationState>()
                         .associateBy { it.groupKey }
+                }
+            }
+
+            // Listen to Consumables (Purchase Entries)
+            launch {
+                SupabaseClient.client.from("purchase_entries").selectAsFlow(
+                    columns = Columns.ALL,
+                    filter = { eq("room_id", me.roomId) }
+                ).collect { _consumables.value = it.decodeList() }
+            }
+
+            // Listen to Usage Logs
+            launch {
+                SupabaseClient.client.from("usage_logs").selectAsFlow(
+                    columns = Columns.ALL,
+                    filter = { eq("room_id", me.roomId) }
+                ).collect { list ->
+                    _usageLogs.value = list.decodeList<com.roomease.app.data.model.UsageLog>()
+                        .groupBy { it.purchaseEntryId }
+                }
+            }
+
+            // Listen to Washroom States
+            launch {
+                SupabaseClient.client.from("washroom_state").selectAsFlow(
+                    columns = Columns.ALL,
+                    filter = { eq("room_id", me.roomId) }
+                ).collect { list ->
+                    _washroomStates.value = list.decodeList<com.roomease.app.data.model.WashroomState>()
+                        .associateBy { it.washroomNumber }
                 }
             }
         }

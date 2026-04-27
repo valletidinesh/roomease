@@ -29,16 +29,21 @@ import com.roomease.app.ui.viewmodel.RoomViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit) {
-    val scope = rememberCoroutineScope()
-    val cookingRepo = remember { CookingRepository() }
-    val roomRepo = remember { RoomRepository() }
+    val me by roomViewModel.currentUser.collectAsState()
+    val users by roomViewModel.users.collectAsState()
+    val room by roomViewModel.room.collectAsState()
+    val rotationStates by roomViewModel.rotationStates.collectAsState()
 
-    // TODO (Phase 2): wire roomId from DataStore / shared ViewModel
-    // Placeholder state until ViewModels are wired
-    var assignedName by remember { mutableStateOf("—") }
-    var groupLabel by remember { mutableStateOf("") }
-    var showOverridePicker by remember { mutableStateOf(false) }
+    val cookingState = rotationStates["COOKING"]
+    val masterOrder = room?.masterOrder ?: emptyList()
+    
+    val assignedUid = if (masterOrder.isNotEmpty() && cookingState != null) {
+        masterOrder[cookingState.cycleIndex % masterOrder.size]
+    } else null
+    
+    val assignedUser = users.find { it.uid == assignedUid }
+    val assignedName = if (assignedUid == me?.uid) "You" else assignedUser?.name ?: "—"
+
     var isLoading by remember { mutableStateOf(false) }
     var successMsg by remember { mutableStateOf<String?>(null) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
@@ -117,20 +122,31 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
             Spacer(Modifier.weight(1f))
 
             // Mark done (self)
+            val scope = rememberCoroutineScope()
+            val cookingRepo = remember { com.roomease.app.data.repository.CookingRepository() }
+
             Button(
                 onClick = {
                     scope.launch {
-                        val uid = SupabaseClient.client.auth.currentUserOrNull()?.id ?: return@launch
-                        successMsg = "Cooking marked done! 🎉"
+                        isLoading = true; errorMsg = null
+                        try {
+                            cookingRepo.markDone(room?.id ?: "", me?.uid ?: "")
+                            successMsg = "Great job! Rotation updated. 🎉"
+                            roomViewModel.refresh()
+                        } catch (e: Exception) {
+                            errorMsg = e.message ?: "Failed to update"
+                        } finally {
+                            isLoading = false
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = CookingColor, contentColor = MaterialTheme.colorScheme.background),
-                enabled = !isLoading,
+                colors = ButtonDefaults.buttonColors(containerColor = CookingColor, contentColor = MaterialTheme.colorScheme.onPrimary),
+                enabled = assignedUid == me?.uid && !isLoading,
             ) {
-                if (isLoading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.background)
-                else { Icon(Icons.Filled.Check, null); Spacer(Modifier.width(8.dp)); Text("Mark Done (Me)", fontWeight = FontWeight.Bold) }
+                if (isLoading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                else { Icon(Icons.Filled.Check, null); Spacer(Modifier.width(8.dp)); Text("I'm Done Cooking! 🥗", fontWeight = FontWeight.Bold) }
             }
 
             // Override — someone else cooked

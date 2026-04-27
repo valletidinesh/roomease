@@ -53,29 +53,60 @@ fun ConsumablesScreen(roomViewModel: RoomViewModel) {
                 Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text("Closed", fontWeight = if (tab == 1) FontWeight.Bold else FontWeight.Normal) })
             }
 
+            val consumables by roomViewModel.consumables.collectAsState()
+            val logs by roomViewModel.usageLogs.collectAsState()
+            val me by roomViewModel.currentUser.collectAsState()
+            val users by roomViewModel.users.collectAsState()
+            val scope = rememberCoroutineScope()
+            val consumablesRepo = remember { com.roomease.app.data.repository.ConsumablesRepository() }
+
             LazyColumn(
                 Modifier.fillMaxSize().padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item { Spacer(Modifier.height(4.dp)) }
-                if (tab == 0) {
-                    // Placeholder entry
-                    item {
-                        ConsumableEntryCard(
-                            item = "Eggs",
-                            boughtBy = "You",
-                            totalQty = 30,
-                            totalPrice = 300.0,
-                            usedSoFar = 12,
-                            isOpen = true,
-                            onLogUsage = {},
-                            onClose = {},
-                        )
-                    }
-                } else {
+                
+                val filtered = consumables.filter { (it.status == "OPEN") == (tab == 0) }
+                
+                if (filtered.isEmpty()) {
                     item {
                         Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                            Text("No closed entries yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(if (tab == 0) "No open entries" else "No closed entries", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                } else {
+                    items(filtered, key = { it.id }) { entry ->
+                        val entryLogs = logs[entry.id] ?: emptyList()
+                        val usedSoFar = entryLogs.sumOf { it.qty }
+                        val buyerUser = users.find { it.uid == entry.boughtBy }
+                        
+                        var showLogDialog by remember { mutableStateOf(false) }
+
+                        ConsumableEntryCard(
+                            item = entry.item,
+                            boughtBy = if (entry.boughtBy == me?.uid) "You" else buyerUser?.name ?: "Roommate",
+                            totalQty = entry.totalQty,
+                            totalPrice = entry.totalPrice,
+                            usedSoFar = usedSoFar,
+                            isOpen = entry.status == "OPEN",
+                            onLogUsage = { showLogDialog = true },
+                            onClose = { 
+                                scope.launch { consumablesRepo.closeEntry(entry.roomId, entry.id) }
+                            },
+                        )
+
+                        if (showLogDialog) {
+                            LogUsageDialog(
+                                entry = entry,
+                                usedSoFar = usedSoFar,
+                                onDismiss = { showLogDialog = false },
+                                onLog = { qty ->
+                                    scope.launch {
+                                        me?.let { consumablesRepo.logUsage(entry.roomId, entry.id, it.uid, qty) }
+                                        showLogDialog = false
+                                    }
+                                }
+                            )
                         }
                     }
                 }
@@ -162,14 +193,12 @@ private fun AddEntryDialog(onDismiss: () -> Unit, onAdd: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BuyListScreen(roomViewModel: RoomViewModel) {
+    val items by roomViewModel.buyList.collectAsState()
+    val me by roomViewModel.currentUser.collectAsState()
+    val scope = rememberCoroutineScope()
+    val buyRepo = remember { com.roomease.app.data.repository.BuyListRepository() }
+    
     var showAddDialog by remember { mutableStateOf(false) }
-    // Placeholder items
-    val items = remember {
-        mutableStateListOf(
-            "Eggs" to BuyStatus.PENDING,
-            "Bread" to BuyStatus.BOUGHT,
-        )
-    }
 
     Scaffold(
         topBar = {
@@ -188,15 +217,30 @@ fun BuyListScreen(roomViewModel: RoomViewModel) {
     ) { padding ->
         LazyColumn(
             Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(padding).padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            item { Spacer(Modifier.height(8.dp)) }
-            items(items) { (name, status) ->
+            item { Spacer(Modifier.height(10.dp)) }
+            
+            if (items.isEmpty()) {
+                item {
+                    Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) {
+                        Text("No items needed yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+
+            items(items, key = { it.id }) { item ->
                 BuyListItemRow(
-                    name = name,
-                    status = status,
-                    onMarkBought = { /* markBought */ },
-                    onDelete = { items.removeAll { it.first == name } },
+                    name = item.itemName,
+                    status = item.status,
+                    onMarkBought = { 
+                        scope.launch { 
+                            me?.let { buyRepo.markBought(item.roomId, item.id, it.uid) }
+                        }
+                    },
+                    onDelete = {
+                        scope.launch { buyRepo.deleteItem(item.roomId, item.id) }
+                    }
                 )
             }
             item { Spacer(Modifier.height(80.dp)) }
@@ -212,7 +256,17 @@ fun BuyListScreen(roomViewModel: RoomViewModel) {
                 OutlinedTextField(value = newItem, onValueChange = { newItem = it }, label = { Text("Item name") }, singleLine = true, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(10.dp))
             },
             confirmButton = {
-                Button(onClick = { if (newItem.isNotBlank()) { items.add(newItem.trim() to BuyStatus.PENDING); showAddDialog = false } }, shape = RoundedCornerShape(10.dp)) { Text("Add") }
+                Button(
+                    onClick = { 
+                        if (newItem.isNotBlank()) { 
+                            scope.launch {
+                                me?.let { buyRepo.addItem(it.roomId, newItem.trim(), it.uid) }
+                                showAddDialog = false 
+                            }
+                        } 
+                    }, 
+                    shape = RoundedCornerShape(10.dp)
+                ) { Text("Add") }
             },
             dismissButton = { TextButton(onClick = { showAddDialog = false }) { Text("Cancel") } },
             containerColor = MaterialTheme.colorScheme.surface,
@@ -246,6 +300,48 @@ private fun BuyListItemRow(name: String, status: BuyStatus, onMarkBought: () -> 
             }
         }
     }
+}
+
+@Composable
+private fun LogUsageDialog(
+    entry: com.roomease.app.data.model.PurchaseEntry,
+    usedSoFar: Int,
+    onDismiss: () -> Unit,
+    onLog: (Int) -> Unit
+) {
+    var qtyText by remember { mutableStateOf("") }
+    val remaining = entry.totalQty - usedSoFar
+    
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Log Usage: ${entry.item}") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Total: ${entry.totalQty} | Remaining: $remaining", style = MaterialTheme.typography.bodySmall)
+                OutlinedTextField(
+                    value = qtyText,
+                    onValueChange = { qtyText = it },
+                    label = { Text("Quantity used") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp)
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val qty = qtyText.toIntOrNull() ?: 0
+                    if (qty > 0 && qty <= remaining) onLog(qty)
+                },
+                enabled = (qtyText.toIntOrNull() ?: 0) in 1..remaining,
+                shape = RoundedCornerShape(10.dp)
+            ) { Text("Log") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        containerColor = MaterialTheme.colorScheme.surface,
+    )
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
