@@ -138,15 +138,21 @@ class RoomRepository {
         }
     }
 
-    suspend fun updateStatus(roomId: String, userId: String, status: String) {
+    suspend fun updateStatus(userId: String, status: String) {
         db.from("users").update({ set("status", status) }) {
-            filter { eq("uid", userId); eq("room_id", roomId) }
+            filter { eq("uid", userId) }
         }
     }
-
-    suspend fun updateUserName(roomId: String, userId: String, newName: String) {
+ 
+    suspend fun updateUserName(userId: String, newName: String) {
         db.from("users").update({ set("name", newName) }) {
-            filter { eq("uid", userId); eq("room_id", roomId) }
+            filter { eq("uid", userId) }
+        }
+    }
+ 
+    suspend fun updatePresence(userId: String, presence: String) {
+        db.from("users").update({ set("presence", presence) }) {
+            filter { eq("uid", userId) }
         }
     }
 
