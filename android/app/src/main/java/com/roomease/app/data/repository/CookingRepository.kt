@@ -60,7 +60,7 @@ class CookingRepository {
     suspend fun markDone(roomId: String, groupKey: String, actualUserId: String) {
         // Read current state
         val state = getGroupState(roomId, groupKey)
-        val assigned = RotationEngine.getAssigned(state)
+        val assigned = RotationEngine.getAssigned(state) ?: throw IllegalStateException("No user assigned for this group")
         val newState = RotationEngine.markDone(state, actualUserId)
 
         // Update group state
