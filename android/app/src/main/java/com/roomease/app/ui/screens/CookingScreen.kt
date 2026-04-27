@@ -34,6 +34,7 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
     val users by roomViewModel.users.collectAsState()
     val room by roomViewModel.room.collectAsState()
     val rotationStates by roomViewModel.rotationStates.collectAsState()
+    val masterOrder = room?.masterOrder ?: emptyList()
 
     val cookingRepo = remember { com.roomease.app.data.repository.CookingRepository() }
     val groupKey = remember(users, masterOrder) { cookingRepo.buildGroupKey(users, masterOrder) }

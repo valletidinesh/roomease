@@ -104,7 +104,7 @@ class RoomViewModel : ViewModel() {
 
             // Listen to Buy List
             SupabaseClient.client.from("buy_list")
-                .selectAsFlow(
+                .selectAsFlow<com.roomease.app.data.model.BuyListItem>(
                     com.roomease.app.data.model.BuyListItem::id,
                     filter = { eq("room_id", me.roomId) }
                 ).onEach { list ->
@@ -113,7 +113,7 @@ class RoomViewModel : ViewModel() {
 
             // Listen to Rotation States
             SupabaseClient.client.from("group_rotation_state")
-                .selectAsFlow(
+                .selectAsFlow<com.roomease.app.data.model.GroupRotationState>(
                     com.roomease.app.data.model.GroupRotationState::id,
                     filter = { eq("room_id", me.roomId) }
                 ).onEach { list ->
@@ -122,7 +122,7 @@ class RoomViewModel : ViewModel() {
 
             // Listen to Consumables (Purchase Entries)
             SupabaseClient.client.from("purchase_entries")
-                .selectAsFlow(
+                .selectAsFlow<com.roomease.app.data.model.PurchaseEntry>(
                     com.roomease.app.data.model.PurchaseEntry::id,
                     filter = { eq("room_id", me.roomId) }
                 ).onEach { list ->
@@ -131,7 +131,7 @@ class RoomViewModel : ViewModel() {
 
             // Listen to Usage Logs
             SupabaseClient.client.from("usage_logs")
-                .selectAsFlow(
+                .selectAsFlow<com.roomease.app.data.model.UsageLog>(
                     com.roomease.app.data.model.UsageLog::id,
                     filter = { eq("room_id", me.roomId) }
                 ).onEach { list ->
@@ -140,7 +140,7 @@ class RoomViewModel : ViewModel() {
 
             // Listen to Washroom States
             SupabaseClient.client.from("washroom_state")
-                .selectAsFlow(
+                .selectAsFlow<com.roomease.app.data.model.WashroomState>(
                     com.roomease.app.data.model.WashroomState::id,
                     filter = { eq("room_id", me.roomId) }
                 ).onEach { list ->
