@@ -154,10 +154,8 @@ fun LoginScreen(
                                 SupabaseClient.client.auth.signUpWith(Email) {
                                     this.email = email.trim()
                                     this.password = password
-                                    this.options {
-                                        data = buildJsonObject {
-                                            put("name", name.trim())
-                                        }
+                                    this.data = buildJsonObject {
+                                        put("name", name.trim())
                                     }
                                 }
                                 // New user — set up or join a room
