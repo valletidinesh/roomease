@@ -35,11 +35,12 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
     val room by roomViewModel.room.collectAsState()
     val rotationStates by roomViewModel.rotationStates.collectAsState()
 
-    val cookingState = rotationStates["COOKING"]
-    val masterOrder = room?.masterOrder ?: emptyList()
-    
+    val cookingRepo = remember { com.roomease.app.data.repository.CookingRepository() }
+    val groupKey = remember(users, masterOrder) { cookingRepo.buildGroupKey(users, masterOrder) }
+    val cookingState = rotationStates[groupKey]
+
     val assignedUid = if (masterOrder.isNotEmpty() && cookingState != null) {
-        masterOrder[cookingState.cycleIndex % masterOrder.size]
+        com.roomease.app.domain.RotationEngine.getAssigned(cookingState)
     } else null
     
     val assignedUser = users.find { it.uid == assignedUid }
@@ -120,14 +121,13 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
 
             // Mark done (self)
             val scope = rememberCoroutineScope()
-            val cookingRepo = remember { com.roomease.app.data.repository.CookingRepository() }
 
             Button(
                 onClick = {
                     scope.launch {
                         isLoading = true; errorMsg = null
                         try {
-                            cookingRepo.markDone(room?.id ?: "", assignedUid ?: "", me?.uid ?: "")
+                            cookingRepo.markDone(room?.id ?: "", groupKey, me?.uid ?: "")
                             successMsg = "Great job! Rotation updated. 🎉"
                             roomViewModel.refresh()
                         } catch (e: Exception) {

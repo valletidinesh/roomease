@@ -103,59 +103,49 @@ class RoomViewModel : ViewModel() {
             }
 
             // Listen to Buy List
-            launch {
-                SupabaseClient.client.from("buy_list")
-                    .selectAsFlow(
-                        com.roomease.app.data.model.BuyListItem::id,
-                        filter = { eq("room_id", me.roomId) }
-                    ).collect { list: List<com.roomease.app.data.model.BuyListItem> ->
-                        _buyList.value = list
-                    }
-            }
+            SupabaseClient.client.from("buy_list")
+                .selectAsFlow(
+                    com.roomease.app.data.model.BuyListItem::id,
+                    filter = { eq("room_id", me.roomId) }
+                ).onEach { list ->
+                    _buyList.value = list
+                }.launchIn(this)
 
             // Listen to Rotation States
-            launch {
-                SupabaseClient.client.from("group_rotation_state")
-                    .selectAsFlow(
-                        com.roomease.app.data.model.GroupRotationState::id,
-                        filter = { eq("room_id", me.roomId) }
-                    ).collect { list: List<com.roomease.app.data.model.GroupRotationState> ->
-                        _rotationStates.value = list.associateBy { it.groupKey }
-                    }
-            }
+            SupabaseClient.client.from("group_rotation_state")
+                .selectAsFlow(
+                    com.roomease.app.data.model.GroupRotationState::id,
+                    filter = { eq("room_id", me.roomId) }
+                ).onEach { list ->
+                    _rotationStates.value = list.associateBy { it.groupKey }
+                }.launchIn(this)
 
             // Listen to Consumables (Purchase Entries)
-            launch {
-                SupabaseClient.client.from("purchase_entries")
-                    .selectAsFlow(
-                        com.roomease.app.data.model.PurchaseEntry::id,
-                        filter = { eq("room_id", me.roomId) }
-                    ).collect { list: List<com.roomease.app.data.model.PurchaseEntry> ->
-                        _consumables.value = list
-                    }
-            }
+            SupabaseClient.client.from("purchase_entries")
+                .selectAsFlow(
+                    com.roomease.app.data.model.PurchaseEntry::id,
+                    filter = { eq("room_id", me.roomId) }
+                ).onEach { list ->
+                    _consumables.value = list
+                }.launchIn(this)
 
             // Listen to Usage Logs
-            launch {
-                SupabaseClient.client.from("usage_logs")
-                    .selectAsFlow(
-                        com.roomease.app.data.model.UsageLog::id,
-                        filter = { eq("room_id", me.roomId) }
-                    ).collect { list: List<com.roomease.app.data.model.UsageLog> ->
-                        _usageLogs.value = list.groupBy { it.purchaseEntryId }
-                    }
-            }
+            SupabaseClient.client.from("usage_logs")
+                .selectAsFlow(
+                    com.roomease.app.data.model.UsageLog::id,
+                    filter = { eq("room_id", me.roomId) }
+                ).onEach { list ->
+                    _usageLogs.value = list.groupBy { it.purchaseEntryId }
+                }.launchIn(this)
 
             // Listen to Washroom States
-            launch {
-                SupabaseClient.client.from("washroom_state")
-                    .selectAsFlow(
-                        com.roomease.app.data.model.WashroomState::id,
-                        filter = { eq("room_id", me.roomId) }
-                    ).collect { list: List<com.roomease.app.data.model.WashroomState> ->
-                        _washroomStates.value = list.associateBy { it.washroomNumber }
-                    }
-            }
+            SupabaseClient.client.from("washroom_state")
+                .selectAsFlow(
+                    com.roomease.app.data.model.WashroomState::id,
+                    filter = { eq("room_id", me.roomId) }
+                ).onEach { list ->
+                    _washroomStates.value = list.associateBy { it.washroomNumber }
+                }.launchIn(this)
         }
     }
 
