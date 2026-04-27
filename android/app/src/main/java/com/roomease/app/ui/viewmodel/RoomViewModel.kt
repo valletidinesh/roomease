@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.*
 import io.github.jan.supabase.postgrest.query.filter.*
 import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
+import kotlinx.coroutines.Job
 
 @OptIn(SupabaseExperimental::class)
 class RoomViewModel : ViewModel() {
@@ -54,102 +55,119 @@ class RoomViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    private var refreshJob: Job? = null
+    private var listenersJob: Job? = null
+
     init {
         viewModelScope.launch {
             SupabaseClient.client.auth.sessionStatus.collect { status ->
                 if (status is io.github.jan.supabase.auth.status.SessionStatus.Authenticated) {
-                    loadInitialData()
+                    refresh()
                 } else {
+                    _isLoading.value = false
                     _currentUser.value = null
                     _room.value = null
-                    _hasNoRoom.value = false
-                    _isLoading.value = false
+                    listenersJob?.cancel()
                 }
             }
         }
     }
 
     fun refresh() {
-        loadInitialData()
-    }
-
-    private fun loadInitialData() {
-        _isLoading.value = true
-        viewModelScope.launch {
-            val uid = SupabaseClient.client.auth.currentUserOrNull()?.id
-            if (uid == null) {
-                _isLoading.value = false
-                return@launch
-            }
-            
-            // Fetch current user row to get roomId
-            val me = roomRepo.getUser(uid)
-            if (me == null || me.roomId.isBlank()) {
-                _hasNoRoom.value = true
-                _isLoading.value = false
-                _currentUser.value = me ?: User(uid = uid, email = SupabaseClient.client.auth.currentUserOrNull()?.email ?: "")
-                return@launch
-            }
-            _currentUser.value = me
-            _hasNoRoom.value = false
-
-            // Fetch room details
-            _room.value = roomRepo.getRoom(me.roomId)
-
-            _isLoading.value = false
-
-            // Listen to all users in the room
-            launch {
-                roomRepo.listenToUsers(me.roomId).collect { usersList ->
-                    _users.value = usersList
-                    _currentUser.value = usersList.find { it.uid == uid }
+        refreshJob?.cancel()
+        refreshJob = viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                val uid = SupabaseClient.client.auth.currentUserOrNull()?.id
+                if (uid == null) {
+                    _isLoading.value = false
+                    return@launch
                 }
+                
+                // Fetch current user row to get roomId
+                val me = try { roomRepo.getUser(uid) } catch (e: Exception) { null }
+                if (me == null || me.roomId.isBlank()) {
+                    _hasNoRoom.value = true
+                    _isLoading.value = false
+                    _currentUser.value = me ?: User(uid = uid, email = SupabaseClient.client.auth.currentUserOrNull()?.email ?: "")
+                    listenersJob?.cancel()
+                    return@launch
+                }
+                _currentUser.value = me
+                _hasNoRoom.value = false
+
+                // Fetch room details
+                _room.value = try { roomRepo.getRoom(me.roomId) } catch (e: Exception) { null }
+
+                _isLoading.value = false
+
+                // Restart listeners
+                listenersJob?.cancel()
+                listenersJob = launch {
+                    // Listen to all users in the room
+                    launch {
+                        try {
+                            roomRepo.listenToUsers(me.roomId).collect { usersList ->
+                                _users.value = usersList
+                                _currentUser.value = usersList.find { it.uid == uid }
+                            }
+                        } catch (e: Exception) { e.printStackTrace() }
+                    }
+
+                    // Listen to Buy List
+                    try {
+                        SupabaseClient.client.from("buy_list")
+                            .selectAsFlow(
+                                com.roomease.app.data.model.BuyListItem::id,
+                                filter = FilterOperation("room_id", FilterOperator.EQ, me.roomId)
+                            ).onEach { list -> _buyList.value = list }
+                            .launchIn(this)
+                    } catch (e: Exception) { e.printStackTrace() }
+
+                    // Listen to Rotation States
+                    try {
+                        SupabaseClient.client.from("group_rotation_state")
+                            .selectAsFlow(
+                                com.roomease.app.data.model.GroupRotationState::id,
+                                filter = FilterOperation("room_id", FilterOperator.EQ, me.roomId)
+                            ).onEach { list -> _rotationStates.value = list.associateBy { it.groupKey } }
+                            .launchIn(this)
+                    } catch (e: Exception) { e.printStackTrace() }
+
+                    // Listen to Consumables (Purchase Entries)
+                    try {
+                        SupabaseClient.client.from("purchase_entries")
+                            .selectAsFlow(
+                                com.roomease.app.data.model.PurchaseEntry::id,
+                                filter = FilterOperation("room_id", FilterOperator.EQ, me.roomId)
+                            ).onEach { list -> _consumables.value = list }
+                            .launchIn(this)
+                    } catch (e: Exception) { e.printStackTrace() }
+
+                    // Listen to Usage Logs
+                    try {
+                        SupabaseClient.client.from("usage_logs")
+                            .selectAsFlow(
+                                com.roomease.app.data.model.UsageLog::id,
+                                filter = FilterOperation("room_id", FilterOperator.EQ, me.roomId)
+                            ).onEach { list -> _usageLogs.value = list.groupBy { it.purchaseEntryId } }
+                            .launchIn(this)
+                    } catch (e: Exception) { e.printStackTrace() }
+
+                    // Listen to Washroom States
+                    try {
+                        SupabaseClient.client.from("washroom_state")
+                            .selectAsFlow(
+                                com.roomease.app.data.model.WashroomState::id,
+                                filter = FilterOperation("room_id", FilterOperator.EQ, me.roomId)
+                            ).onEach { list -> _washroomStates.value = list.associateBy { it.washroomNumber } }
+                            .launchIn(this)
+                    } catch (e: Exception) { e.printStackTrace() }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                _isLoading.value = false
             }
-
-            // Listen to Buy List
-            SupabaseClient.client.from("buy_list")
-                .selectAsFlow(
-                    com.roomease.app.data.model.BuyListItem::id,
-                    filter = FilterOperation("room_id", FilterOperator.EQ, me.roomId)
-                ).onEach { list ->
-                    _buyList.value = list
-                }.launchIn(this)
-
-            // Listen to Rotation States
-            SupabaseClient.client.from("group_rotation_state")
-                .selectAsFlow(
-                    com.roomease.app.data.model.GroupRotationState::id,
-                    filter = FilterOperation("room_id", FilterOperator.EQ, me.roomId)
-                ).onEach { list ->
-                    _rotationStates.value = list.associateBy { it.groupKey }
-                }.launchIn(this)
-
-            // Listen to Consumables (Purchase Entries)
-            SupabaseClient.client.from("purchase_entries")
-                .selectAsFlow(
-                    com.roomease.app.data.model.PurchaseEntry::id,
-                    filter = FilterOperation("room_id", FilterOperator.EQ, me.roomId)
-                ).onEach { list ->
-                    _consumables.value = list
-                }.launchIn(this)
-
-            // Listen to Usage Logs
-            SupabaseClient.client.from("usage_logs")
-                .selectAsFlow(
-                    com.roomease.app.data.model.UsageLog::id,
-                    filter = FilterOperation("room_id", FilterOperator.EQ, me.roomId)
-                ).onEach { list ->
-                    _usageLogs.value = list.groupBy { it.purchaseEntryId }
-                }.launchIn(this)
-
-            // Listen to Washroom States
-            SupabaseClient.client.from("washroom_state")
-                .selectAsFlow(
-                    com.roomease.app.data.model.WashroomState::id,
-                    filter = FilterOperation("room_id", FilterOperator.EQ, me.roomId)
-                ).onEach { list ->
-                    _washroomStates.value = list.associateBy { it.washroomNumber }
-                }.launchIn(this)
         }
     }
 
