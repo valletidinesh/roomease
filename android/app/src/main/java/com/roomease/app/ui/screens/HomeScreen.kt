@@ -98,10 +98,8 @@ private fun RoomHome(roomViewModel: RoomViewModel, onNavigateTo: (Screen) -> Uni
     
     // Helper to get name of person next in rotation
     fun getNextName(groupKey: String): String {
-        val state = rotationStates[groupKey] ?: return "Not started"
-        val order = room?.masterOrder ?: return "Unknown"
-        if (order.isEmpty()) return "No members"
-        val nextUid = order[state.cycleIndex % order.size]
+        val state = rotationStates[groupKey] ?: return "—"
+        val nextUid = com.roomease.app.domain.RotationEngine.getAssigned(state) ?: return "—"
         val user = users.find { it.uid == nextUid }
         return if (nextUid == me?.uid) "You" else user?.name ?: "Roommate"
     }

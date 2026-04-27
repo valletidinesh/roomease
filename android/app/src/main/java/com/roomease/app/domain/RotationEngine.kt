@@ -14,8 +14,10 @@ object RotationEngine {
      * Returns the UID of the person assigned to cook next
      * given the current group's state.
      */
-    fun getAssigned(state: GroupRotationState): String {
-        require(state.currentCycleOrder.isNotEmpty()) { "currentCycleOrder must not be empty" }
+    fun getAssigned(state: GroupRotationState): String? {
+        if (state.currentCycleOrder.isEmpty() || state.cycleIndex < 0 || state.cycleIndex >= state.currentCycleOrder.size) {
+            return null
+        }
         return state.currentCycleOrder[state.cycleIndex]
     }
 
