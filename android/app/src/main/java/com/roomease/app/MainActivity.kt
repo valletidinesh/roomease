@@ -59,6 +59,14 @@ fun RoomEaseMainApp() {
         }
     }
 
+    val hasNoRoom by roomViewModel.hasNoRoom.collectAsState()
+
+    val currentBottomNavItems = if (hasNoRoom) {
+        bottomNavItems.filter { it.screen == Screen.Home || it.screen == Screen.Account }
+    } else {
+        bottomNavItems
+    }
+
     val showBottomBar = currentRoute in bottomNavItems.map { it.screen.route }
 
     Scaffold(
@@ -68,9 +76,9 @@ fun RoomEaseMainApp() {
             if (showBottomBar) {
                 NavigationBar(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = androidx.compose.ui.unit.Dp(0f),
+                    tonalElevation = 8.dp
                 ) {
-                    bottomNavItems.forEach { item ->
+                    currentBottomNavItems.forEach { item ->
                         NavigationBarItem(
                             icon = {
                                 Icon(
@@ -112,30 +120,41 @@ fun RoomEaseMainApp() {
             composable(Screen.Splash.route) {
                 SplashScreen(
                     onNavigateToLogin = { navController.navigate(Screen.Login.route) { popUpTo(Screen.Splash.route) { inclusive = true } } },
-                    onNavigateToDashboard = { navController.navigate(Screen.Dashboard.route) { popUpTo(Screen.Splash.route) { inclusive = true } } },
+                    onNavigateToDashboard = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Splash.route) { inclusive = true } } },
                 )
             }
             composable(Screen.Login.route) {
                 LoginScreen(
                     onNavigateToCreateRoom = { navController.navigate(Screen.CreateRoom.route) },
                     onNavigateToJoinRoom = { navController.navigate(Screen.JoinRoom.route) },
-                    onNavigateToDashboard = { navController.navigate(Screen.Dashboard.route) { popUpTo(Screen.Login.route) { inclusive = true } } },
+                    onNavigateToDashboard = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } } },
                 )
             }
             composable(Screen.CreateRoom.route) {
                 CreateRoomScreen(
-                    onRoomCreated = { navController.navigate(Screen.Dashboard.route) { popUpTo(Screen.Login.route) { inclusive = true } } },
+                    onRoomCreated = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } } },
                 )
             }
             composable(Screen.JoinRoom.route) {
                 JoinRoomScreen(
-                    onRoomJoined = { navController.navigate(Screen.Dashboard.route) { popUpTo(Screen.Login.route) { inclusive = true } } },
+                    onRoomJoined = { navController.navigate(Screen.Home.route) { popUpTo(Screen.Login.route) { inclusive = true } } },
+                )
+            }
+            composable(Screen.Home.route) {
+                HomeScreen(
+                    roomViewModel = roomViewModel,
+                    onNavigateTo = { navController.navigate(it.route) }
                 )
             }
             composable(Screen.Dashboard.route) {
                 DashboardScreen(
                     roomViewModel = roomViewModel,
                     onNavigateTo = { navController.navigate(it.route) }
+                )
+            }
+            composable(Screen.Account.route) {
+                AccountScreen(
+                    roomViewModel = roomViewModel
                 )
             }
             composable(Screen.Cooking.route) {

@@ -11,8 +11,12 @@ sealed class Screen(val route: String) {
     object CreateRoom   : Screen("create_room")
     object JoinRoom     : Screen("join_room")
 
-    // Main app
+    // Main app tabs
+    object Home         : Screen("home")
     object Dashboard    : Screen("dashboard")
+    object Account      : Screen("account")
+
+    // Chore screens
     object Cooking      : Screen("cooking")
     object CookingCalendar : Screen("cooking_calendar")
     object Trash        : Screen("trash")
@@ -30,11 +34,7 @@ data class BottomNavItem(
 )
 
 val bottomNavItems = listOf(
-    BottomNavItem(Screen.Dashboard,   "Home",      Icons.Filled.Home),
-    BottomNavItem(Screen.Cooking,     "Cooking",   Icons.Filled.Restaurant),
-    BottomNavItem(Screen.Trash,       "Trash",     Icons.Filled.Delete),
-    BottomNavItem(Screen.Washroom,    "Washroom",  Icons.Filled.CleanHands),
-    BottomNavItem(Screen.Water,       "Water",     Icons.Filled.WaterDrop),
-    BottomNavItem(Screen.Consumables, "Goods",     Icons.Filled.Egg),
-    BottomNavItem(Screen.BuyList,     "Buy List",  Icons.Filled.ShoppingCart),
+    BottomNavItem(Screen.Home,      "Home",      Icons.Filled.Home),
+    BottomNavItem(Screen.Dashboard, "Dashboard", Icons.Filled.GridView),
+    BottomNavItem(Screen.Account,   "Account",   Icons.Filled.Person),
 )
