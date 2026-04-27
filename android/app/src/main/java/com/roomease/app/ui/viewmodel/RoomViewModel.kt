@@ -17,6 +17,7 @@ import io.github.jan.supabase.realtime.selectAsFlow
 import io.github.jan.supabase.realtime.decodeList
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import io.github.jan.supabase.postgrest.query.filter.eq
 
 class RoomViewModel : ViewModel() {
     private val roomRepo = RoomRepository()
