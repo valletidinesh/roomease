@@ -32,7 +32,7 @@ import com.roomease.app.ui.theme.*
 import io.github.jan.supabase.auth.auth
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.postgrest
-import io.github.jan.supabase.postgrest.query.filter.eq
+import io.github.jan.supabase.postgrest.query.filter.*
 import kotlinx.coroutines.launch
 
 // ─────────────────────────────────────────────────────────────────────────────

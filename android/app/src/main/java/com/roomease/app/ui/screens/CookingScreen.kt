@@ -48,6 +48,7 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
     var isLoading by remember { mutableStateOf(false) }
     var successMsg by remember { mutableStateOf<String?>(null) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
+    var showOverridePicker by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -126,7 +127,7 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
                     scope.launch {
                         isLoading = true; errorMsg = null
                         try {
-                            cookingRepo.markDone(room?.id ?: "", me?.uid ?: "")
+                            cookingRepo.markDone(room?.id ?: "", assignedUid ?: "", me?.uid ?: "")
                             successMsg = "Great job! Rotation updated. 🎉"
                             roomViewModel.refresh()
                         } catch (e: Exception) {
