@@ -57,6 +57,7 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
     var successMsg by remember { mutableStateOf<String?>(null) }
     var errorMsg by remember { mutableStateOf<String?>(null) }
     var showOverridePicker by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -127,7 +128,6 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
             Spacer(Modifier.weight(1f))
 
             // Mark done (self)
-            val scope = rememberCoroutineScope()
 
             Button(
                 onClick = {
