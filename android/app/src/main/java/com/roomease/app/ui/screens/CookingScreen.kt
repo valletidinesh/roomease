@@ -151,6 +151,7 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
         }
         if (showOverridePicker) {
             MemberPicker(
+                title = "Who cooked?",
                 members = users.filter { it.presence == "PRESENT" },
                 onDismiss = { showOverridePicker = false },
                 onSelected = { user ->
@@ -174,10 +175,10 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
 }
 
 @Composable
-fun MemberPicker(members: List<com.roomease.app.data.model.User>, onDismiss: () -> Unit, onSelected: (com.roomease.app.data.model.User) -> Unit) {
+fun MemberPicker(title: String, members: List<com.roomease.app.data.model.User>, onDismiss: () -> Unit, onSelected: (com.roomease.app.data.model.User) -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Who cooked?") },
+        title = { Text(title) },
         text = {
             LazyColumn {
                 items(members) { user ->

@@ -45,14 +45,17 @@ class TrashRepository {
         val newState = RotationEngine.markDone(state, actualUserId)
         
         // Update rotation state
-        db.from("group_rotation_state").update(
+        // Upsert rotation state
+        db.from("group_rotation_state").upsert(
             buildJsonObject {
+                put("room_id", roomId)
+                put("group_key", state.groupKey)
                 put("current_cycle_order", buildJsonArray { newState.currentCycleOrder.forEach { add(it) } })
                 put("cycle_index", newState.cycleIndex)
                 put("last_actual_user_id", newState.lastActualUserId)
                 put("current_cycle_num", newState.currentCycleNum)
             }
-        ) { filter { eq("id", state.id) } }
+        )
 
         // Update user counts
         val user = db.from("users").select { filter { eq("uid", actualUserId) } }.decodeSingle<User>()
@@ -110,10 +113,15 @@ class WashroomRepository {
     suspend fun markCleaned(roomId: String, washroomNumber: Int) {
         val state = getWashroomState(roomId, washroomNumber)
         val newIndex = (state.cycleIndex + 1) % state.groupOrder.size
-        db.from("washroom_state").update({
-            set("cycle_index", newIndex)
-            set("status", "ACTIVE")
-        }) { filter { eq("room_id", roomId); eq("washroom_number", washroomNumber) } }
+        db.from("washroom_state").upsert(
+            buildJsonObject {
+                put("room_id", roomId)
+                put("washroom_number", washroomNumber)
+                put("group_order", buildJsonArray { state.groupOrder.forEach { add(it) } })
+                put("cycle_index", newIndex)
+                put("status", "ACTIVE")
+            }
+        )
     }
 }
 
@@ -146,13 +154,15 @@ class WaterRepository {
             workingOrder.add(uid)
         }
 
-        db.from("group_rotation_state").update(
+        db.from("group_rotation_state").upsert(
             buildJsonObject {
+                put("room_id", roomId)
+                put("group_key", "WATER")
                 put("current_cycle_order", buildJsonArray { workingOrder.forEach { add(it) } })
                 put("cycle_index", 0)
                 put("current_cycle_num", state.currentCycleNum + 1)
             }
-        ) { filter { eq("id", state.id) } }
+        )
 
         // Update user counts
         actualPerformers.forEach { u ->

@@ -51,7 +51,7 @@ object RotationEngine {
     }
 
     fun createFreshState(groupKey: String, masterOrder: List<String>): GroupRotationState {
-        val sequence = deriveSequence(groupKey, masterOrder)
+        val sequence = deriveSequence(groupKey, masterOrder).ifEmpty { masterOrder }
         return GroupRotationState(
             groupKey = groupKey,
             sequence = sequence,

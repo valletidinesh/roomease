@@ -158,6 +158,7 @@ private fun TrashTypePanel(trashType: TrashType, roomViewModel: RoomViewModel) {
 
         if (showOverridePicker) {
             MemberPicker(
+                title = "Who threw trash?",
                 members = users.filter { it.presence == "PRESENT" },
                 onDismiss = { showOverridePicker = false },
                 onSelected = { user ->
