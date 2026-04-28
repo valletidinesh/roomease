@@ -117,7 +117,7 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
             Button(
                 onClick = {
                     scope.launch {
-                        isLoading = true; errorMsg = null
+                        isLoading = true
                         try {
                             cookingRepo.markDone(room?.id ?: "", groupKey, me?.uid ?: "")
                             roomViewModel.showMessage("Great job! Rotation updated. 🎉")
