@@ -22,12 +22,9 @@ object RotationEngine {
     fun markDone(state: GroupRotationState, actualUserId: String): GroupRotationState {
         require(state.currentCycleOrder.isNotEmpty()) { "currentCycleOrder must not be empty" }
 
-        // ── Consecutive-cook guard ────────────────────────────────────────────
-        if (actualUserId == state.lastActualUserId && state.currentCycleOrder.size > 1) {
-            throw IllegalStateException(
-                "Cannot perform task back-to-back when others are available."
-            )
-        }
+        // ── Consecutive-cook guard removed per user request ──────────────────
+        // (Allows A A B C D patterns)
+
 
         // ── Queue Logic: Move actual user to the end ──────────────────────────
         val workingOrder = state.currentCycleOrder.toMutableList()

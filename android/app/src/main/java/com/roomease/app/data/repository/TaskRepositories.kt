@@ -27,14 +27,22 @@ class TrashRepository {
 
     suspend fun getRotationState(roomId: String, trashType: TrashType): GroupRotationState {
         val key = if (trashType == TrashType.WET) "TRASH_WET" else "TRASH_DRY"
-        return db.from("group_rotation_state")
+        val state = db.from("group_rotation_state")
             .select { filter { eq("room_id", roomId); eq("group_key", key) } }
-            .decodeSingle<GroupRotationState>()
+            .decodeSingleOrNull<GroupRotationState>()
+            
+        if (state == null) {
+            // Fallback: This usually means the room was created before seeding was added
+            // We should ideally seed it here or return a dummy that won't crash
+            val room = db.from("rooms").select { filter { eq("id", roomId) } }.decodeSingle<Room>()
+            return RotationEngine.createFreshState(key, room.masterOrder).copy(roomId = roomId)
+        }
+        return state
     }
 
-    suspend fun markDone(roomId: String, userId: String, trashType: TrashType) {
+    suspend fun markDone(roomId: String, actualUserId: String, trashType: TrashType) {
         val state = getRotationState(roomId, trashType)
-        val newState = RotationEngine.markDone(state, userId)
+        val newState = RotationEngine.markDone(state, actualUserId)
         
         // Update rotation state
         db.from("group_rotation_state").update(
@@ -47,18 +55,18 @@ class TrashRepository {
         ) { filter { eq("id", state.id) } }
 
         // Update user counts
-        val user = db.from("users").select { filter { eq("uid", userId) } }.decodeSingle<User>()
+        val user = db.from("users").select { filter { eq("uid", actualUserId) } }.decodeSingle<User>()
         val newWet = if (trashType == TrashType.WET) user.trashWetCount + 1 else user.trashWetCount
         val newDry = if (trashType == TrashType.DRY) user.trashDryCount + 1 else user.trashDryCount
         
         db.from("users").update({
             set("trash_wet_count", newWet)
             set("trash_dry_count", newDry)
-        }) { filter { eq("uid", userId) } }
+        }) { filter { eq("uid", actualUserId) } }
 
         // History
         db.from("trash_history").insert(
-            TrashHistory(roomId = roomId, userId = userId, trashType = trashType.name, completeTurnsAfter = minOf(newWet, newDry))
+            TrashHistory(roomId = roomId, userId = actualUserId, trashType = trashType.name, completeTurnsAfter = minOf(newWet, newDry))
         )
     }
 
@@ -78,9 +86,17 @@ class WashroomRepository {
     private val db get() = SupabaseClient.client
 
     suspend fun getWashroomState(roomId: String, washroomNumber: Int): WashroomState {
-        return db.from("washroom_state")
+        val state = db.from("washroom_state")
             .select { filter { eq("room_id", roomId); eq("washroom_number", washroomNumber) } }
-            .decodeSingle()
+            .decodeSingleOrNull<WashroomState>()
+            
+        return state ?: WashroomState(
+            roomId = roomId,
+            washroomNumber = washroomNumber,
+            groupOrder = listOf("1", "2"),
+            cycleIndex = 0,
+            status = WashroomStatus.CLEAN
+        )
     }
 
     fun listenToWashroomState(roomId: String, washroomNumber: Int): Flow<WashroomState> = flow {
@@ -108,21 +124,24 @@ class WaterRepository {
     private val db get() = SupabaseClient.client
 
     suspend fun getRotationState(roomId: String): GroupRotationState {
-        return db.from("group_rotation_state")
+        val state = db.from("group_rotation_state")
             .select { filter { eq("room_id", roomId); eq("group_key", "WATER") } }
-            .decodeSingle<GroupRotationState>()
+            .decodeSingleOrNull<GroupRotationState>()
+            
+        if (state == null) {
+            val room = db.from("rooms").select { filter { eq("id", roomId) } }.decodeSingle<Room>()
+            return RotationEngine.createFreshState("WATER", room.masterOrder).copy(roomId = roomId)
+        }
+        return state
     }
 
-    suspend fun markDone(roomId: String, users: List<User>) {
+    suspend fun markDone(roomId: String, actualPerformers: List<User>) {
         val state = getRotationState(roomId)
-        val masterOrder = state.sequence
+        val performerUids = actualPerformers.map { it.uid }
         
-        // Pick the next 2 from the current cycle order
-        val pairUids = state.currentCycleOrder.take(2)
-        
-        // Update rotation state: move BOTH to end
+        // Update rotation state: move ALL performers to end
         var workingOrder = state.currentCycleOrder.toMutableList()
-        pairUids.forEach { uid ->
+        performerUids.forEach { uid ->
             workingOrder.remove(uid)
             workingOrder.add(uid)
         }
@@ -136,14 +155,13 @@ class WaterRepository {
         ) { filter { eq("id", state.id) } }
 
         // Update user counts
-        pairUids.forEach { uid ->
-            val u = users.find { it.uid == uid } ?: return@forEach
+        actualPerformers.forEach { u ->
             db.from("users").update({
                 set("water_fetch_count", u.waterFetchCount + 1)
-            }) { filter { eq("uid", uid) } }
+            }) { filter { eq("uid", u.uid) } }
         }
 
-        db.from("water_history").insert(WaterHistory(roomId = roomId, pair = pairUids))
+        db.from("water_history").insert(WaterHistory(roomId = roomId, pair = performerUids))
     }
 
     fun listenToWaterHistory(roomId: String): Flow<List<WaterHistory>> = flow {

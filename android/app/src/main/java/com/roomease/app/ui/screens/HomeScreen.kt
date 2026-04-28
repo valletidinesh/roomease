@@ -104,6 +104,11 @@ private fun RoomHome(roomViewModel: RoomViewModel, onNavigateTo: (Screen) -> Uni
         return if (nextUid == me?.uid) "You" else user?.name ?: "Roommate"
     }
 
+    val cookingRepo = remember { com.roomease.app.data.repository.CookingRepository() }
+    val cookingKey = if (users.isNotEmpty() && (room?.masterOrder?.isNotEmpty() == true)) {
+        cookingRepo.buildGroupKey(users, room!!.masterOrder)
+    } else ""
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -126,7 +131,7 @@ private fun RoomHome(roomViewModel: RoomViewModel, onNavigateTo: (Screen) -> Uni
             
             StatusCard(
                 title = "Cooking",
-                subtitle = "Tonight's Chef: ${getNextName("COOKING")}",
+                subtitle = "Tonight's Chef: ${if (cookingKey.isNotBlank()) getNextName(cookingKey) else "—"}",
                 icon = Icons.Filled.Restaurant,
                 color = CookingColor,
                 onClick = { onNavigateTo(Screen.Cooking) }
@@ -134,15 +139,18 @@ private fun RoomHome(roomViewModel: RoomViewModel, onNavigateTo: (Screen) -> Uni
             
             StatusCard(
                 title = "Trash Duty",
-                subtitle = "Next: ${getNextName("TRASH")}",
+                subtitle = "Next: ${getNextName("TRASH_WET")}",
                 icon = Icons.Filled.Delete,
                 color = TrashColor,
                 onClick = { onNavigateTo(Screen.Trash) }
             )
             
+            val w1State = roomViewModel.washroomStates.collectAsState().value[1]
+            val w1NextGroup = w1State?.groupOrder?.getOrNull(w1State.cycleIndex % w1State.groupOrder.size) ?: "1"
+            
             StatusCard(
                 title = "Washroom",
-                subtitle = "Cleaning Group 1", // Washroom uses a different group structure, keeping simple for now
+                subtitle = "Cleaning Group $w1NextGroup",
                 icon = Icons.Filled.CleanHands,
                 color = WashroomColor,
                 onClick = { onNavigateTo(Screen.Washroom) }

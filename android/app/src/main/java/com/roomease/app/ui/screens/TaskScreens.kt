@@ -1,7 +1,10 @@
 package com.roomease.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -65,13 +68,18 @@ private fun TrashTypePanel(trashType: TrashType, roomViewModel: RoomViewModel) {
     val groupKey = if (trashType == TrashType.WET) "TRASH_WET" else "TRASH_DRY"
     val trashState = rotationStates[groupKey]
     
-    // In queue model, next person is always index 0 of currentCycleOrder
-    val assignedUid = trashState?.currentCycleOrder?.firstOrNull() ?: room?.masterOrder?.firstOrNull()
+    val eligibleUsers = users.filter { it.presence == "PRESENT" }
+    val assignedUid = if (eligibleUsers.isNotEmpty()) {
+        eligibleUsers.minByOrNull { if (trashType == TrashType.WET) it.trashWetCount else it.trashDryCount }?.uid
+    } else {
+        trashState?.currentCycleOrder?.firstOrNull() ?: room?.masterOrder?.firstOrNull()
+    }
     val assignedUser = users.find { it.uid == assignedUid }
     val assignedName = if (assignedUid == me?.uid) "You" else assignedUser?.name ?: "—"
 
     val accentColor = if (trashType == TrashType.WET) WaterColor else BuyListColor
     var isLoading by remember { mutableStateOf(false) }
+    var showOverridePicker by remember { mutableStateOf(false) }
 
     Column(
         Modifier.fillMaxSize().padding(24.dp),
@@ -100,34 +108,69 @@ private fun TrashTypePanel(trashType: TrashType, roomViewModel: RoomViewModel) {
             }
         }
 
-        Spacer(Modifier.weight(1f))
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Button(
+                onClick = {
+                    scope.launch {
+                        isLoading = true
+                        try {
+                            trashRepo.markDone(room?.id ?: "", assignedUid ?: me?.uid ?: "", trashType)
+                            roomViewModel.showMessage("Trash marked done! 🎉")
+                            roomViewModel.refresh()
+                        } catch (e: Exception) {
+                            roomViewModel.showMessage(e.message ?: "Update failed")
+                        } finally {
+                            isLoading = false
+                        }
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = TrashColor),
+                enabled = !isLoading,
+            ) {
+                if (isLoading) CircularProgressIndicator(Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
+                else {
+                    Icon(Icons.Filled.Check, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (assignedUid == me?.uid) "I've thrown it" else "I've thrown it (Override)", fontWeight = FontWeight.Bold)
+                }
+            }
 
-        Button(
-            onClick = {
-                scope.launch {
-                    isLoading = true
-                    try {
-                        trashRepo.markDone(room?.id ?: "", me?.uid ?: "", trashType)
-                        roomViewModel.showMessage("Trash marked done! 🎉")
-                        roomViewModel.refresh()
-                    } catch (e: Exception) {
-                        roomViewModel.showMessage(e.message ?: "Update failed")
-                    } finally {
-                        isLoading = false
+            OutlinedButton(
+                onClick = { showOverridePicker = true },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp),
+            ) {
+                Icon(Icons.Filled.SwapHoriz, null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Someone else threw it")
+            }
+        }
+
+        if (showOverridePicker) {
+            MemberPicker(
+                members = users.filter { it.presence == "PRESENT" },
+                onDismiss = { showOverridePicker = false },
+                onSelected = { user ->
+                    showOverridePicker = false
+                    scope.launch {
+                        isLoading = true
+                        try {
+                            trashRepo.markDone(room?.id ?: "", user.uid, trashType)
+                            roomViewModel.showMessage("${user.name} threw trash! 🗑️")
+                            roomViewModel.refresh()
+                        } catch (e: Exception) {
+                            roomViewModel.showMessage(e.message ?: "Failed")
+                        } finally {
+                            isLoading = false
+                        }
                     }
                 }
-            },
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = TrashColor),
-            enabled = assignedUid == me?.uid && !isLoading,
-        ) {
-            if (isLoading) CircularProgressIndicator(Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
-            else {
-                Icon(Icons.Filled.Check, null)
-                Spacer(Modifier.width(8.dp))
-                Text("Mark ${trashType.name.lowercase()} trash done", fontWeight = FontWeight.Bold)
-            }
+            )
         }
     }
 }
@@ -167,13 +210,16 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
     val washroomRepo = remember { com.roomease.app.data.repository.WashroomRepository() }
 
     val state = washroomStates[number]
-    val currentGroupId = state?.groupOrder?.getOrNull(state.cycleIndex % state.groupOrder.size) ?: ""
+    val groupOrder = state?.groupOrder ?: listOf("1", "2")
+    val cycleIndex = state?.cycleIndex ?: 0
+    val currentGroupId = groupOrder.getOrNull(cycleIndex % groupOrder.size) ?: ""
     
     val membersInGroup = users.filter { it.washroomGroup.toString() == currentGroupId }
     val assignedName = if (membersInGroup.isEmpty()) "—" 
-        else if (membersInGroup.any { it.uid == me?.uid }) "Your Group"
         else membersInGroup.joinToString(", ") { it.name }
 
+    val washroomLabel = if (number == 1) "Master Washroom" else "Common Washroom"
+    
     var isLoading by remember { mutableStateOf(false) }
 
     Box(
@@ -187,8 +233,8 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
                 }
                 Spacer(Modifier.width(12.dp))
                 Column {
-                    Text("Washroom $number", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-                    Text("Next cleaner: $assignedName", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(washroomLabel, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+                    Text("Up Next: $assignedName", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Spacer(Modifier.weight(1f))
                 Surface(shape = RoundedCornerShape(8.dp), color = WashroomColor.copy(0.15f)) {
@@ -213,13 +259,13 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
                 modifier = Modifier.fillMaxWidth().height(44.dp),
                 shape = RoundedCornerShape(10.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = WashroomColor, contentColor = MaterialTheme.colorScheme.background),
-                enabled = membersInGroup.any { it.uid == me?.uid } && !isLoading,
+                enabled = !isLoading,
             ) {
                 if (isLoading) CircularProgressIndicator(Modifier.size(16.dp), color = MaterialTheme.colorScheme.background)
                 else {
                     Icon(Icons.Filled.Check, null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Mark Cleaned", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                    Text(if (membersInGroup.any { it.uid == me?.uid }) "Mark Cleaned" else "Mark Cleaned (Override)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
                 }
             }
         }
@@ -241,7 +287,6 @@ fun WaterScreen(roomViewModel: RoomViewModel) {
 
     val waterState = rotationStates["WATER"]
     
-    // In queue model, next pair is always first 2 of currentCycleOrder
     val pairUids = waterState?.currentCycleOrder?.take(2) ?: room?.masterOrder?.take(2) ?: emptyList()
     val user1 = users.find { it.uid == pairUids.getOrNull(0) }
     val user2 = users.find { it.uid == pairUids.getOrNull(1) }
@@ -249,6 +294,8 @@ fun WaterScreen(roomViewModel: RoomViewModel) {
     val isMyTurn = pairUids.contains(me?.uid)
 
     var isLoading by remember { mutableStateOf(false) }
+    var showOverridePicker by remember { mutableStateOf(false) }
+    var selectedPairs = remember { mutableStateListOf<String>() }
 
     Scaffold(
         topBar = {
@@ -277,7 +324,7 @@ fun WaterScreen(roomViewModel: RoomViewModel) {
                         Text("+", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         PersonBadge(name = if (user2?.uid == me?.uid) "You" else user2?.name ?: "—", color = WaterColor)
                     }
-                    Text("Turns: ${user1?.waterFetchCount ?: 0} | ${user2?.waterFetchCount ?: 0}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Sorted by fairness queue", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
@@ -288,7 +335,8 @@ fun WaterScreen(roomViewModel: RoomViewModel) {
                     scope.launch {
                         isLoading = true
                         try {
-                            waterRepo.markDone(room?.id ?: "", users)
+                            // Standard pair
+                            waterRepo.markDone(room?.id ?: "", users.filter { pairUids.contains(it.uid) })
                             roomViewModel.showMessage("Water fetched! 💧")
                             roomViewModel.refresh()
                         } catch (e: Exception) {
@@ -301,15 +349,71 @@ fun WaterScreen(roomViewModel: RoomViewModel) {
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = WaterColor, contentColor = MaterialTheme.colorScheme.onPrimary),
-                enabled = isMyTurn && !isLoading,
+                enabled = !isLoading,
             ) {
                 if (isLoading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
                 else {
                     Icon(Icons.Filled.WaterDrop, null)
                     Spacer(Modifier.width(8.dp))
-                    Text("We Fetched Water 💧", fontWeight = FontWeight.Bold)
+                    Text(if (isMyTurn) "We Fetched Water 💧" else "They Fetched Water (Verify)", fontWeight = FontWeight.Bold)
                 }
             }
+
+            OutlinedButton(
+                onClick = { showOverridePicker = true; selectedPairs.clear() },
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp),
+            ) {
+                Icon(Icons.Filled.People, null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(8.dp))
+                Text("Select custom pair")
+            }
+        }
+        
+        if (showOverridePicker) {
+            AlertDialog(
+                onDismissRequest = { showOverridePicker = false },
+                title = { Text("Select 2 people") },
+                text = {
+                    LazyColumn {
+                        items(users) { user ->
+                            val isSelected = selectedPairs.contains(user.uid)
+                            ListItem(
+                                headlineContent = { Text(user.name) },
+                                modifier = Modifier.clickable { 
+                                    if (isSelected) selectedPairs.remove(user.uid)
+                                    else if (selectedPairs.size < 2) selectedPairs.add(user.uid)
+                                },
+                                leadingContent = {
+                                    Checkbox(checked = isSelected, onCheckedChange = null)
+                                }
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            val uids = selectedPairs.toList()
+                            showOverridePicker = false
+                            scope.launch {
+                                isLoading = true
+                                try {
+                                    waterRepo.markDone(room?.id ?: "", users.filter { uids.contains(it.uid) })
+                                    roomViewModel.showMessage("Custom pair fetched water! 💧")
+                                    roomViewModel.refresh()
+                                } catch (e: Exception) {
+                                    roomViewModel.showMessage(e.message ?: "Failed")
+                                } finally {
+                                    isLoading = false
+                                }
+                            }
+                        },
+                        enabled = selectedPairs.size == 2
+                    ) { Text("Confirm") }
+                },
+                dismissButton = { TextButton(onClick = { showOverridePicker = false }) { Text("Cancel") } }
+            )
         }
     }
 }
