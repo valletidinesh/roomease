@@ -165,26 +165,39 @@ fun CreateRoomScreen(roomViewModel: com.roomease.app.ui.viewmodel.RoomViewModel,
                                     val adminUid = authUser.id
                                     val adminEmail = authUser.email ?: ""
 
-                                    // Ensure admin is in the members list
+                                    // 1. Ensure admin is in the list before finalizing
                                     if (members.none { it.uid == adminUid }) {
                                         members.add(0, MemberDraft(adminUid, authUser.email?.substringBefore("@") ?: "Me", adminEmail))
+                                        // Reset masterOrder to match new indices if we added someone
                                         masterOrder = members.indices.toList()
                                     }
 
-                                    val orderedUids = masterOrder.map { members[it].uid }
-                                    val washroomGroups = mapOf(
-                                        "1" to members.indices.filter { washroomAssignment[it] == 1 }.map { members[it].uid },
-                                        "2" to members.indices.filter { washroomAssignment[it] == 2 }.map { members[it].uid },
-                                    )
+                                    // 2. Map indices to UIDs safely
+                                    val orderedUids = masterOrder.mapNotNull { idx ->
+                                        members.getOrNull(idx)?.uid
+                                    }
+
+                                    // 3. Prepare washroom groups safely
+                                    val washroomGroups = mutableMapOf<String, List<String>>()
+                                    val w1 = mutableListOf<String>()
+                                    val w2 = mutableListOf<String>()
+                                    members.forEachIndexed { idx, m ->
+                                        if (washroomAssignment[idx] == 2) w2.add(m.uid) else w1.add(m.uid)
+                                    }
+                                    washroomGroups["1"] = w1
+                                    washroomGroups["2"] = w2
+
+                                    // 4. Create user objects for DB
                                     val userObjects = members.mapIndexed { i, draft ->
                                         User(
                                             uid = draft.uid,
                                             name = draft.name,
                                             email = draft.email,
-                                            masterOrder = masterOrder.indexOf(i),
+                                            masterOrder = masterOrder.indexOf(i).coerceAtLeast(0),
                                             washroomGroup = washroomAssignment[i] ?: 1,
                                         )
                                     }
+
                                     repo.createRoom(
                                         roomName = roomName,
                                         adminUid = adminUid,
@@ -194,7 +207,8 @@ fun CreateRoomScreen(roomViewModel: com.roomease.app.ui.viewmodel.RoomViewModel,
                                     )
                                     onRoomCreated()
                                 } catch (e: Exception) {
-                                    errorMsg = e.message ?: "Failed to create room"
+                                    e.printStackTrace() // This shows in Logcat!
+                                    errorMsg = "Crash: ${e.javaClass.simpleName} - ${e.message}"
                                 } finally {
                                     isLoading = false
                                 }
