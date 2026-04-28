@@ -192,7 +192,7 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
                 }
                 Spacer(Modifier.weight(1f))
                 Surface(shape = RoundedCornerShape(8.dp), color = WashroomColor.copy(0.15f)) {
-                    Text(state?.status ?: "ACTIVE", Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall, color = WashroomColor, fontWeight = FontWeight.Bold)
+                    Text(state?.status?.name ?: "ACTIVE", Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall, color = WashroomColor, fontWeight = FontWeight.Bold)
                 }
             }
             Button(
