@@ -26,7 +26,7 @@ object SupabaseClient {
             install(Auth)
             install(Realtime)
 
-            serializer = KotlinXSerializer(Json {
+            defaultSerializer = KotlinXSerializer(Json {
                 ignoreUnknownKeys = true
                 coerceInputValues = true
             })
