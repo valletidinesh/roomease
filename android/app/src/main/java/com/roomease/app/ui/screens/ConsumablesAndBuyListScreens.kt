@@ -260,7 +260,11 @@ fun BuyListScreen(roomViewModel: RoomViewModel) {
                     onClick = { 
                         if (newItem.isNotBlank()) { 
                             scope.launch {
-                                me?.let { buyRepo.addItem(it.roomId, newItem.trim(), it.uid) }
+                                me?.let { user ->
+                                    user.roomId?.let { rid ->
+                                        buyRepo.addItem(rid, newItem.trim(), user.uid)
+                                    }
+                                }
                                 showAddDialog = false 
                             }
                         } 
