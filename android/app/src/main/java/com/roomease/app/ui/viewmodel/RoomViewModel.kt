@@ -92,10 +92,10 @@ class RoomViewModel : ViewModel() {
                             val oldRoomId = _currentUser.value?.roomId
                             _currentUser.value = me
                             
-                            // If roomId just changed from empty to something, trigger refresh
-                            if (oldRoomId.isNullOrBlank() && me.roomId.isNotBlank()) {
+                            // If roomId just changed from null/empty to something, trigger refresh
+                            if (oldRoomId.isNullOrBlank() && !me.roomId.isNullOrBlank()) {
                                 refresh()
-                            } else if (me.roomId.isBlank()) {
+                            } else if (me.roomId.isNullOrBlank()) {
                                 _hasNoRoom.value = true
                                 listenersJob?.cancel()
                                 _room.value = null
@@ -125,7 +125,7 @@ class RoomViewModel : ViewModel() {
                 
                 // Fetch current user row to get roomId
                 val me = try { roomRepo.getUser(uid) } catch (e: Exception) { null }
-                if (me == null || me.roomId.isBlank()) {
+                if (me == null || me.roomId.isNullOrBlank()) {
                     _hasNoRoom.value = true
                     _isLoading.value = false
                     // Don't overwrite _currentUser if already set by listener
@@ -138,13 +138,14 @@ class RoomViewModel : ViewModel() {
                 _currentUser.value = me
                 _hasNoRoom.value = false
 
-                // Fetch room details
-                _room.value = try { roomRepo.getRoom(me.roomId) } catch (e: Exception) { null }
+                // Fetch room details (roomId is guaranteed non-null here)
+                val rid = me.roomId!!
+                _room.value = try { roomRepo.getRoom(rid) } catch (e: Exception) { null }
 
                 _isLoading.value = false
 
                 // Restart listeners for room-specific data
-                startRoomListeners(me.roomId, uid)
+                startRoomListeners(rid, uid)
             } catch (e: Exception) {
                 e.printStackTrace()
                 _isLoading.value = false

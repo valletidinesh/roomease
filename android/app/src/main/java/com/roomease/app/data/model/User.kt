@@ -14,10 +14,10 @@ import kotlinx.serialization.ExperimentalSerializationApi
 @Serializable
 data class User(
     val uid: String = "",
-    @SerialName("room_id")   val roomId: String = "",
+    @SerialName("room_id")   val roomId: String? = null,
     val name: String = "",
     val email: String = "",
-    val phone: String = "",
+    val phone: String? = null,
     /** 0-based position in master rotation order */
     @EncodeDefault @SerialName("master_order")      val masterOrder: Int = 0,
     @EncodeDefault val status: String = "ACTIVE",   // UserStatus enum stored as string
