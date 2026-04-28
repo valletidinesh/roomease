@@ -1,6 +1,7 @@
 package com.roomease.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -40,8 +41,13 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
     val groupKey = remember(users, masterOrder) { cookingRepo.buildGroupKey(users, masterOrder) }
     val cookingState = rotationStates[groupKey]
 
-    val assignedUid = if (masterOrder.isNotEmpty() && cookingState != null) {
-        com.roomease.app.domain.RotationEngine.getAssigned(cookingState)
+    val assignedUid = if (masterOrder.isNotEmpty()) {
+        if (cookingState != null) {
+            com.roomease.app.domain.RotationEngine.getAssigned(cookingState)
+        } else {
+            // If no state yet, assume the first person in the group key is next
+            groupKey.split(",").firstOrNull()
+        }
     } else null
     
     val assignedUser = users.find { it.uid == assignedUid }
@@ -158,7 +164,53 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
                 Text("Someone else cooked")
             }
         }
+        if (showOverridePicker) {
+            MemberPicker(
+                members = users.filter { it.presence == "PRESENT" },
+                onDismiss = { showOverridePicker = false },
+                onSelected = { user ->
+                    showOverridePicker = false
+                    scope.launch {
+                        isLoading = true; errorMsg = null
+                        try {
+                            cookingRepo.markDone(room?.id ?: "", groupKey, user.uid)
+                            successMsg = "${user.name} cooked! Rotation updated. 🥗"
+                            roomViewModel.refresh()
+                        } catch (e: Exception) {
+                            errorMsg = e.message ?: "Failed to update"
+                        } finally {
+                            isLoading = false
+                        }
+                    }
+                }
+            )
+        }
     }
+}
+
+@Composable
+fun MemberPicker(members: List<com.roomease.app.data.model.User>, onDismiss: () -> Unit, onSelected: (com.roomease.app.data.model.User) -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Who cooked?") },
+        text = {
+            LazyColumn {
+                items(members) { user ->
+                    ListItem(
+                        headlineContent = { Text(user.name) },
+                        modifier = Modifier.clickable { onSelected(user) },
+                        leadingContent = {
+                            Box(Modifier.size(32.dp).clip(CircleShape).background(CookingColor.copy(0.1f)), contentAlignment = Alignment.Center) {
+                                Text(user.name.take(1).uppercase())
+                            }
+                        }
+                    )
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

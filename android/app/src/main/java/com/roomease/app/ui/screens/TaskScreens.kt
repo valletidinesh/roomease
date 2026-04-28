@@ -66,8 +66,12 @@ private fun TrashTypePanel(trashType: TrashType, roomViewModel: RoomViewModel) {
     val trashState = rotationStates[groupKey]
     val masterOrder = room?.masterOrder ?: emptyList()
     
-    val assignedUid = if (masterOrder.isNotEmpty() && trashState != null) {
-        masterOrder[trashState.cycleIndex % masterOrder.size]
+    val assignedUid = if (masterOrder.isNotEmpty()) {
+        if (trashState != null) {
+            masterOrder[trashState.cycleIndex % masterOrder.size]
+        } else {
+            masterOrder.first() // Fallback for missing state
+        }
     } else null
     
     val assignedUser = users.find { it.uid == assignedUid }
@@ -176,8 +180,12 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
 
     val state = washroomStates[number]
     val groupOrder = state?.groupOrder ?: emptyList()
-    val currentGroupId = if (groupOrder.isNotEmpty() && state != null) {
-        groupOrder[state.cycleIndex % groupOrder.size]
+    val currentGroupId = if (groupOrder.isNotEmpty()) {
+        if (state != null) {
+            groupOrder[state.cycleIndex % groupOrder.size]
+        } else {
+            groupOrder.first()
+        }
     } else ""
     
     val membersInGroup = users.filter { it.washroomGroup.toString() == currentGroupId }
@@ -252,10 +260,14 @@ fun WaterScreen(roomViewModel: RoomViewModel) {
     val waterState = rotationStates["WATER"]
     val masterOrder = room?.masterOrder ?: emptyList()
     
-    val pair = if (masterOrder.size >= 2 && waterState != null) {
-        val idx1 = waterState.cycleIndex % masterOrder.size
-        val idx2 = (waterState.cycleIndex + 1) % masterOrder.size
-        masterOrder[idx1] to masterOrder[idx2]
+    val pair = if (masterOrder.size >= 2) {
+        if (waterState != null) {
+            val idx1 = waterState.cycleIndex % masterOrder.size
+            val idx2 = (waterState.cycleIndex + 1) % masterOrder.size
+            masterOrder[idx1] to masterOrder[idx2]
+        } else {
+            masterOrder[0] to masterOrder[1]
+        }
     } else null
     
     val user1 = users.find { it.uid == pair?.first }
