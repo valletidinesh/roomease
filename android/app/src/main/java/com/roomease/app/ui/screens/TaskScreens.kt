@@ -51,7 +51,9 @@ fun TrashScreen(roomViewModel: RoomViewModel) {
             }
 
             val trashType = if (selectedTab == 0) TrashType.WET else TrashType.DRY
-            TrashTypePanel(trashType = trashType, roomViewModel = roomViewModel)
+            Box(Modifier.weight(1f)) {
+                TrashTypePanel(trashType = trashType, roomViewModel = roomViewModel)
+            }
         }
     }
 }
@@ -68,13 +70,12 @@ private fun TrashTypePanel(trashType: TrashType, roomViewModel: RoomViewModel) {
     val groupKey = if (trashType == TrashType.WET) "TRASH_WET" else "TRASH_DRY"
     val trashState = rotationStates[groupKey]
     
-    val eligibleUsers = users.filter { it.presence == "PRESENT" }
-    val assignedUid = if (eligibleUsers.isNotEmpty()) {
-        eligibleUsers.minByOrNull { if (trashType == TrashType.WET) it.trashWetCount else it.trashDryCount }?.uid
-    } else {
-        trashState?.currentCycleOrder?.firstOrNull() ?: room?.masterOrder?.firstOrNull()
+    val assignedUser = try {
+        com.roomease.app.domain.TrashSelector.getNextThrower(users, trashType)
+    } catch (e: Exception) {
+        users.find { it.uid == (trashState?.currentCycleOrder?.firstOrNull() ?: room?.masterOrder?.firstOrNull()) }
     }
-    val assignedUser = users.find { it.uid == assignedUid }
+    val assignedUid = assignedUser?.uid
     val assignedName = if (assignedUid == me?.uid) "You" else assignedUser?.name ?: "—"
 
     val accentColor = if (trashType == TrashType.WET) WaterColor else BuyListColor
@@ -108,6 +109,8 @@ private fun TrashTypePanel(trashType: TrashType, roomViewModel: RoomViewModel) {
             }
         }
 
+        Spacer(Modifier.weight(1f))
+
         Column(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -129,7 +132,7 @@ private fun TrashTypePanel(trashType: TrashType, roomViewModel: RoomViewModel) {
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = TrashColor),
+                colors = ButtonDefaults.buttonColors(containerColor = accentColor, contentColor = MaterialTheme.colorScheme.background),
                 enabled = !isLoading,
             ) {
                 if (isLoading) CircularProgressIndicator(Modifier.size(20.dp), color = MaterialTheme.colorScheme.onPrimary)
@@ -190,7 +193,7 @@ fun WashroomScreen(roomViewModel: RoomViewModel) {
         }
     ) { padding ->
         Column(
-            Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(padding).padding(16.dp),
+            Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(padding).padding(16.dp).verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Spacer(Modifier.height(8.dp))
