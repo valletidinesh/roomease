@@ -16,6 +16,10 @@ import kotlinx.coroutines.flow.flow
 import com.roomease.app.data.model.isEligible
 import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 class CookingRepository {
 
@@ -64,14 +68,16 @@ class CookingRepository {
         val newState = RotationEngine.markDone(state, actualUserId)
 
         // Update group state
-        db.from("group_rotation_state").update(
-            {
-                set("current_cycle_order", newState.currentCycleOrder)
-                set("cycle_index", newState.cycleIndex)
-                set("last_actual_user_id", newState.lastActualUserId)
-                set("current_cycle_num", newState.currentCycleNum)
+        db.from("group_rotation_state").upsert(
+            buildJsonObject {
+                put("room_id", roomId)
+                put("group_key", groupKey)
+                put("current_cycle_order", buildJsonArray { newState.currentCycleOrder.forEach { add(it) } })
+                put("cycle_index", newState.cycleIndex)
+                put("last_actual_user_id", newState.lastActualUserId)
+                put("current_cycle_num", newState.currentCycleNum)
             }
-        ) { filter { eq("room_id", roomId); eq("group_key", groupKey) } }
+        ) { onConflict = "room_id,group_key" }
 
         // Insert history
         db.from("cooking_history").insert(

@@ -55,7 +55,7 @@ class TrashRepository {
                 put("last_actual_user_id", newState.lastActualUserId)
                 put("current_cycle_num", newState.currentCycleNum)
             }
-        )
+        ) { onConflict = "room_id,group_key" }
 
         // Update user counts
         val user = db.from("users").select { filter { eq("uid", actualUserId) } }.decodeSingle<User>()
@@ -121,7 +121,7 @@ class WashroomRepository {
                 put("cycle_index", newIndex)
                 put("status", "ACTIVE")
             }
-        )
+        ) { onConflict = "room_id,washroom_number" }
     }
 }
 
@@ -162,7 +162,7 @@ class WaterRepository {
                 put("cycle_index", 0)
                 put("current_cycle_num", state.currentCycleNum + 1)
             }
-        )
+        ) { onConflict = "room_id,group_key" }
 
         // Update user counts
         actualPerformers.forEach { u ->
