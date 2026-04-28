@@ -4,6 +4,8 @@ import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
+import io.github.jan.supabase.serializer.KotlinXSerializer
+import kotlinx.serialization.json.Json
 
 /**
  * Singleton Supabase client.
@@ -23,6 +25,11 @@ object SupabaseClient {
             install(Postgrest)
             install(Auth)
             install(Realtime)
+
+            serializer = KotlinXSerializer(Json {
+                ignoreUnknownKeys = true
+                coerceInputValues = true
+            })
         }
     }
 }
