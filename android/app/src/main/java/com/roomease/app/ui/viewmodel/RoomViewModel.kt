@@ -20,10 +20,20 @@ import io.github.jan.supabase.postgrest.query.filter.*
 import io.github.jan.supabase.postgrest.query.filter.FilterOperation
 import io.github.jan.supabase.postgrest.query.filter.FilterOperator
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 
 @OptIn(SupabaseExperimental::class)
 class RoomViewModel : ViewModel() {
     private val roomRepo = RoomRepository()
+
+    private val _uiMessage = MutableSharedFlow<String>()
+    val uiMessage: SharedFlow<String> = _uiMessage.asSharedFlow()
+
+    fun showMessage(message: String) {
+        viewModelScope.launch { _uiMessage.emit(message) }
+    }
 
     private val _currentUser = MutableStateFlow<User?>(null)
     val currentUser: StateFlow<User?> = _currentUser.asStateFlow()

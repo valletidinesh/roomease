@@ -64,22 +64,14 @@ private fun TrashTypePanel(trashType: TrashType, roomViewModel: RoomViewModel) {
 
     val groupKey = if (trashType == TrashType.WET) "TRASH_WET" else "TRASH_DRY"
     val trashState = rotationStates[groupKey]
-    val masterOrder = room?.masterOrder ?: emptyList()
     
-    val assignedUid = if (masterOrder.isNotEmpty()) {
-        if (trashState != null) {
-            masterOrder[trashState.cycleIndex % masterOrder.size]
-        } else {
-            masterOrder.first() // Fallback for missing state
-        }
-    } else null
-    
+    // In queue model, next person is always index 0 of currentCycleOrder
+    val assignedUid = trashState?.currentCycleOrder?.firstOrNull() ?: room?.masterOrder?.firstOrNull()
     val assignedUser = users.find { it.uid == assignedUid }
     val assignedName = if (assignedUid == me?.uid) "You" else assignedUser?.name ?: "—"
 
     val accentColor = if (trashType == TrashType.WET) WaterColor else BuyListColor
     var isLoading by remember { mutableStateOf(false) }
-    var successMsg by remember { mutableStateOf<String?>(null) }
 
     Column(
         Modifier.fillMaxSize().padding(24.dp),
@@ -88,7 +80,6 @@ private fun TrashTypePanel(trashType: TrashType, roomViewModel: RoomViewModel) {
     ) {
         Spacer(Modifier.height(8.dp))
 
-        // Next thrower card
         Box(
             Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface).padding(28.dp),
             contentAlignment = Alignment.Center,
@@ -102,16 +93,11 @@ private fun TrashTypePanel(trashType: TrashType, roomViewModel: RoomViewModel) {
             }
         }
 
-        // Leaderboard hint
         Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.surface) {
             Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Complete turns per person", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Turns: ${assignedUser?.trashWetCount ?: 0} Wet | ${assignedUser?.trashDryCount ?: 0} Dry", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Icon(Icons.Filled.Leaderboard, null, tint = accentColor)
             }
-        }
-
-        successMsg?.let {
-            Text(it, color = accentColor, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
         }
 
         Spacer(Modifier.weight(1f))
@@ -122,8 +108,10 @@ private fun TrashTypePanel(trashType: TrashType, roomViewModel: RoomViewModel) {
                     isLoading = true
                     try {
                         trashRepo.markDone(room?.id ?: "", me?.uid ?: "", trashType)
-                        successMsg = "Trash marked done! 🎉"
+                        roomViewModel.showMessage("Trash marked done! 🎉")
                         roomViewModel.refresh()
+                    } catch (e: Exception) {
+                        roomViewModel.showMessage(e.message ?: "Update failed")
                     } finally {
                         isLoading = false
                     }
@@ -179,14 +167,7 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
     val washroomRepo = remember { com.roomease.app.data.repository.WashroomRepository() }
 
     val state = washroomStates[number]
-    val groupOrder = state?.groupOrder ?: emptyList()
-    val currentGroupId = if (groupOrder.isNotEmpty()) {
-        if (state != null) {
-            groupOrder[state.cycleIndex % groupOrder.size]
-        } else {
-            groupOrder.first()
-        }
-    } else ""
+    val currentGroupId = state?.groupOrder?.getOrNull(state.cycleIndex % state.groupOrder.size) ?: ""
     
     val membersInGroup = users.filter { it.washroomGroup.toString() == currentGroupId }
     val assignedName = if (membersInGroup.isEmpty()) "—" 
@@ -211,7 +192,7 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
                 }
                 Spacer(Modifier.weight(1f))
                 Surface(shape = RoundedCornerShape(8.dp), color = WashroomColor.copy(0.15f)) {
-                    Text("ACTIVE", Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall, color = WashroomColor, fontWeight = FontWeight.Bold)
+                    Text(state?.status ?: "ACTIVE", Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelSmall, color = WashroomColor, fontWeight = FontWeight.Bold)
                 }
             }
             Button(
@@ -220,9 +201,10 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
                         isLoading = true
                         try {
                             washroomRepo.markCleaned(room?.id ?: "", number)
+                            roomViewModel.showMessage("Washroom $number marked cleaned! ✨")
                             roomViewModel.refresh()
                         } catch (e: Exception) {
-                            // Error
+                            roomViewModel.showMessage(e.message ?: "Failed")
                         } finally {
                             isLoading = false
                         }
@@ -258,25 +240,15 @@ fun WaterScreen(roomViewModel: RoomViewModel) {
     val waterRepo = remember { com.roomease.app.data.repository.WaterRepository() }
 
     val waterState = rotationStates["WATER"]
-    val masterOrder = room?.masterOrder ?: emptyList()
     
-    val pair = if (masterOrder.size >= 2) {
-        if (waterState != null) {
-            val idx1 = waterState.cycleIndex % masterOrder.size
-            val idx2 = (waterState.cycleIndex + 1) % masterOrder.size
-            masterOrder[idx1] to masterOrder[idx2]
-        } else {
-            masterOrder[0] to masterOrder[1]
-        }
-    } else null
+    // In queue model, next pair is always first 2 of currentCycleOrder
+    val pairUids = waterState?.currentCycleOrder?.take(2) ?: room?.masterOrder?.take(2) ?: emptyList()
+    val user1 = users.find { it.uid == pairUids.getOrNull(0) }
+    val user2 = users.find { it.uid == pairUids.getOrNull(1) }
     
-    val user1 = users.find { it.uid == pair?.first }
-    val user2 = users.find { it.uid == pair?.second }
-    
-    val isMyTurn = pair?.first == me?.uid || pair?.second == me?.uid
+    val isMyTurn = pairUids.contains(me?.uid)
 
     var isLoading by remember { mutableStateOf(false) }
-    var successMsg by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
         topBar = {
@@ -301,11 +273,11 @@ fun WaterScreen(roomViewModel: RoomViewModel) {
                     Text("💧", style = MaterialTheme.typography.displayMedium)
                     Text("Next pair to fetch water", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        PersonBadge(name = if (pair?.first == me?.uid) "You" else user1?.name ?: "—", color = WaterColor)
+                        PersonBadge(name = if (user1?.uid == me?.uid) "You" else user1?.name ?: "—", color = WaterColor)
                         Text("+", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        PersonBadge(name = if (pair?.second == me?.uid) "You" else user2?.name ?: "—", color = WaterColor)
+                        PersonBadge(name = if (user2?.uid == me?.uid) "You" else user2?.name ?: "—", color = WaterColor)
                     }
-                    Text("Sorted by lowest fetch count", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Turns: ${user1?.waterFetchCount ?: 0} | ${user2?.waterFetchCount ?: 0}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
@@ -317,10 +289,10 @@ fun WaterScreen(roomViewModel: RoomViewModel) {
                         isLoading = true
                         try {
                             waterRepo.markDone(room?.id ?: "", users)
-                            successMsg = "Water fetched! 💧"
+                            roomViewModel.showMessage("Water fetched! 💧")
                             roomViewModel.refresh()
                         } catch (e: Exception) {
-                            // Error
+                            roomViewModel.showMessage(e.message ?: "Failed")
                         } finally {
                             isLoading = false
                         }

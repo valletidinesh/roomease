@@ -54,8 +54,6 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
     val assignedName = if (assignedUid == me?.uid) "You" else assignedUser?.name ?: "—"
 
     var isLoading by remember { mutableStateOf(false) }
-    var successMsg by remember { mutableStateOf<String?>(null) }
-    var errorMsg by remember { mutableStateOf<String?>(null) }
     var showOverridePicker by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
@@ -112,19 +110,6 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
                 }
             }
 
-            successMsg?.let {
-                Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.primaryContainer.copy(0.2f)) {
-                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.CheckCircle, null, tint = Primary)
-                        Spacer(Modifier.width(8.dp))
-                        Text(it, color = Primary, style = MaterialTheme.typography.bodyMedium)
-                    }
-                }
-            }
-            errorMsg?.let {
-                Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
-            }
-
             Spacer(Modifier.weight(1f))
 
             // Mark done (self)
@@ -135,10 +120,10 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
                         isLoading = true; errorMsg = null
                         try {
                             cookingRepo.markDone(room?.id ?: "", groupKey, me?.uid ?: "")
-                            successMsg = "Great job! Rotation updated. 🎉"
+                            roomViewModel.showMessage("Great job! Rotation updated. 🎉")
                             roomViewModel.refresh()
                         } catch (e: Exception) {
-                            errorMsg = e.message ?: "Failed to update"
+                            roomViewModel.showMessage(e.message ?: "Failed to update")
                         } finally {
                             isLoading = false
                         }
@@ -171,13 +156,13 @@ fun CookingScreen(roomViewModel: RoomViewModel, onNavigateToCalendar: () -> Unit
                 onSelected = { user ->
                     showOverridePicker = false
                     scope.launch {
-                        isLoading = true; errorMsg = null
+                        isLoading = true
                         try {
                             cookingRepo.markDone(room?.id ?: "", groupKey, user.uid)
-                            successMsg = "${user.name} cooked! Rotation updated. 🥗"
+                            roomViewModel.showMessage("${user.name} cooked! Rotation updated. 🥗")
                             roomViewModel.refresh()
                         } catch (e: Exception) {
-                            errorMsg = e.message ?: "Failed to update"
+                            roomViewModel.showMessage(e.message ?: "Failed to update")
                         } finally {
                             isLoading = false
                         }

@@ -69,10 +69,18 @@ fun RoomEaseMainApp() {
     }
 
     val showBottomBar = currentRoute in bottomNavItems.map { it.screen.route }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        roomViewModel.uiMessage.collect { msg ->
+            snackbarHostState.showSnackbar(msg)
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (showBottomBar) {
                 NavigationBar(

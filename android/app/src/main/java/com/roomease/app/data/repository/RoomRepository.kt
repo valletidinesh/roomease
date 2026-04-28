@@ -77,12 +77,13 @@ class RoomRepository {
         }
         db.from("group_rotation_state").insert(defaultStates)
 
-        // 4. Seed washroom states (Group 1 and Group 2)
-        listOf(1, 2).forEach { num ->
+        // 4. Seed washroom states (e.g. Washroom 1 and Washroom 2)
+        washroomGroups.forEach { (numStr, uids) ->
             db.from("washroom_state").insert(
                 buildJsonObject {
                     put("room_id", roomId)
-                    put("washroom_number", num)
+                    put("washroom_number", numStr.toInt())
+                    // The rotation is between "1" and "2" (the group IDs)
                     put("group_order", buildJsonArray { add("1"); add("2") })
                     put("cycle_index", 0)
                     put("status", "CLEAN")

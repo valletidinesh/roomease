@@ -177,24 +177,28 @@ fun CreateRoomScreen(roomViewModel: com.roomease.app.ui.viewmodel.RoomViewModel,
                                         members.getOrNull(idx)?.uid
                                     }
 
-                                    // 3. Prepare washroom groups safely
+                                    // 3. Prepare washroom groups safely (Using UIDs)
                                     val washroomGroups = mutableMapOf<String, List<String>>()
                                     val w1 = mutableListOf<String>()
                                     val w2 = mutableListOf<String>()
+                                    
+                                    // Default assignments if missing
                                     members.forEachIndexed { idx, m ->
-                                        if (washroomAssignment[idx] == 2) w2.add(m.uid) else w1.add(m.uid)
+                                        val g = washroomAssignment[idx] ?: (if (idx % 2 == 0) 1 else 2)
+                                        if (g == 2) w2.add(m.uid) else w1.add(m.uid)
                                     }
                                     washroomGroups["1"] = w1
                                     washroomGroups["2"] = w2
 
                                     // 4. Create user objects for DB
                                     val userObjects = members.mapIndexed { i, draft ->
+                                        val g = washroomAssignment[i] ?: (if (i % 2 == 0) 1 else 2)
                                         User(
                                             uid = draft.uid,
                                             name = draft.name,
                                             email = draft.email,
                                             masterOrder = masterOrder.indexOf(i).coerceAtLeast(0),
-                                            washroomGroup = washroomAssignment[i] ?: 1,
+                                            washroomGroup = g,
                                         )
                                     }
 
