@@ -30,9 +30,10 @@ object RotationEngine {
         val workingOrder = state.currentCycleOrder.toMutableList()
         workingOrder.remove(actualUserId)
         workingOrder.add(actualUserId)
+        val finalOrder = workingOrder.distinct()
 
         return state.copy(
-            currentCycleOrder = workingOrder,
+            currentCycleOrder = finalOrder,
             cycleIndex = 0, // Always 0 in queue model
             lastActualUserId = actualUserId,
             currentCycleNum = state.currentCycleNum + 1 // Tracking total turns
@@ -51,7 +52,7 @@ object RotationEngine {
     }
 
     fun createFreshState(groupKey: String, masterOrder: List<String>): GroupRotationState {
-        val sequence = deriveSequence(groupKey, masterOrder).ifEmpty { masterOrder }
+        val sequence = deriveSequence(groupKey, masterOrder).ifEmpty { masterOrder }.distinct()
         return GroupRotationState(
             groupKey = groupKey,
             sequence = sequence,

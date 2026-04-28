@@ -83,8 +83,8 @@ class RoomRepository {
                 buildJsonObject {
                     put("room_id", roomId)
                     put("washroom_number", numStr.toInt())
-                    // The rotation is between "1" and "2" (the group IDs)
-                    put("group_order", buildJsonArray { add("1"); add("2") })
+                    // Each washroom rotates through its specific members
+                    put("group_order", buildJsonArray { uids.forEach { add(it) } })
                     put("cycle_index", 0)
                     put("status", "ACTIVE")
                 }

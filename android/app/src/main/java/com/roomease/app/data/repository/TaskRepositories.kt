@@ -110,15 +110,21 @@ class WashroomRepository {
         changes.collect { emit(getWashroomState(roomId, washroomNumber)) }
     }
 
-    suspend fun markCleaned(roomId: String, washroomNumber: Int) {
+    suspend fun markCleaned(roomId: String, washroomNumber: Int, actualUserId: String) {
         val state = getWashroomState(roomId, washroomNumber)
-        val newIndex = (state.cycleIndex + 1) % state.groupOrder.size
+        
+        // Queue model: move actual cleaner to the end
+        val workingOrder = state.groupOrder.toMutableList()
+        workingOrder.remove(actualUserId)
+        workingOrder.add(actualUserId)
+        val finalOrder = workingOrder.distinct()
+
         db.from("washroom_state").upsert(
             buildJsonObject {
                 put("room_id", roomId)
                 put("washroom_number", washroomNumber)
-                put("group_order", buildJsonArray { state.groupOrder.forEach { add(it) } })
-                put("cycle_index", newIndex)
+                put("group_order", buildJsonArray { finalOrder.forEach { add(it) } })
+                put("cycle_index", 0) // Always 0 in queue model
                 put("status", "ACTIVE")
             }
         ) { onConflict = "room_id,washroom_number" }
@@ -153,12 +159,13 @@ class WaterRepository {
             workingOrder.remove(uid)
             workingOrder.add(uid)
         }
+        val finalOrder = workingOrder.distinct()
 
         db.from("group_rotation_state").upsert(
             buildJsonObject {
                 put("room_id", roomId)
                 put("group_key", "WATER")
-                put("current_cycle_order", buildJsonArray { workingOrder.forEach { add(it) } })
+                put("current_cycle_order", buildJsonArray { finalOrder.forEach { add(it) } })
                 put("cycle_index", 0)
                 put("current_cycle_num", state.currentCycleNum + 1)
             }

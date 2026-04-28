@@ -216,17 +216,15 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
     val washroomRepo = remember { com.roomease.app.data.repository.WashroomRepository() }
 
     val state = washroomStates[number]
-    val groupOrder = state?.groupOrder ?: listOf("1", "2")
-    val cycleIndex = state?.cycleIndex ?: 0
-    val currentGroupId = groupOrder.getOrNull(cycleIndex % groupOrder.size) ?: ""
-    
-    val membersInGroup = users.filter { it.washroomGroup.toString() == currentGroupId }
-    val assignedName = if (membersInGroup.isEmpty()) "—" 
-        else membersInGroup.joinToString(", ") { it.name }
+    val groupOrder = state?.groupOrder ?: emptyList()
+    val currentCleanerUid = groupOrder.firstOrNull() ?: ""
+    val cleaner = users.find { it.uid == currentCleanerUid }
+    val assignedName = if (currentCleanerUid == me?.uid) "You" else cleaner?.name ?: "—"
 
     val washroomLabel = if (number == 1) "Master Washroom" else "Common Washroom"
     
     var isLoading by remember { mutableStateOf(false) }
+    var showOverridePicker by remember { mutableStateOf(false) }
 
     Box(
         Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface)
@@ -252,8 +250,8 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
                     scope.launch {
                         isLoading = true
                         try {
-                            washroomRepo.markCleaned(room?.id ?: "", number)
-                            roomViewModel.showMessage("Washroom $number marked cleaned! ✨")
+                            washroomRepo.markCleaned(room?.id ?: "", number, currentCleanerUid.ifBlank { me?.uid ?: "" })
+                            roomViewModel.showMessage("$washroomLabel marked cleaned! ✨")
                             roomViewModel.refresh()
                         } catch (e: Exception) {
                             roomViewModel.showMessage(e.message ?: "Failed")
@@ -271,10 +269,44 @@ private fun WashroomCard(number: Int, roomViewModel: RoomViewModel) {
                 else {
                     Icon(Icons.Filled.Check, null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text(if (membersInGroup.any { it.uid == me?.uid }) "Mark Cleaned" else "Mark Cleaned (Override)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
+                    Text(if (currentCleanerUid == me?.uid) "I've Cleaned it" else "I've Cleaned it (Override)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
                 }
             }
+
+            OutlinedButton(
+                onClick = { showOverridePicker = true },
+                modifier = Modifier.fillMaxWidth().height(40.dp),
+                shape = RoundedCornerShape(10.dp),
+            ) {
+                Icon(Icons.Filled.SwapHoriz, null, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Someone else cleaned", style = MaterialTheme.typography.labelMedium)
+            }
         }
+    }
+
+    if (showOverridePicker) {
+        val eligibleMembers = users.filter { uid -> groupOrder.contains(uid.uid) }
+        MemberPicker(
+            title = "Who cleaned $washroomLabel?",
+            members = eligibleMembers.ifEmpty { users.filter { it.presence == "PRESENT" } },
+            onDismiss = { showOverridePicker = false },
+            onSelected = { user ->
+                showOverridePicker = false
+                scope.launch {
+                    isLoading = true
+                    try {
+                        washroomRepo.markCleaned(room?.id ?: "", number, user.uid)
+                        roomViewModel.showMessage("${user.name} cleaned $washroomLabel! ✨")
+                        roomViewModel.refresh()
+                    } catch (e: Exception) {
+                        roomViewModel.showMessage(e.message ?: "Failed")
+                    } finally {
+                        isLoading = false
+                    }
+                }
+            }
+        )
     }
 }
 
