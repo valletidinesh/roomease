@@ -86,7 +86,7 @@ class RoomRepository {
                     // The rotation is between "1" and "2" (the group IDs)
                     put("group_order", buildJsonArray { add("1"); add("2") })
                     put("cycle_index", 0)
-                    put("status", "CLEAN")
+                    put("status", "ACTIVE")
                 }
             )
         }

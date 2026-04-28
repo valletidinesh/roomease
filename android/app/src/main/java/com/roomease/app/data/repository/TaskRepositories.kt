@@ -95,7 +95,7 @@ class WashroomRepository {
             washroomNumber = washroomNumber,
             groupOrder = listOf("1", "2"),
             cycleIndex = 0,
-            status = WashroomStatus.CLEAN
+            status = WashroomStatus.ACTIVE
         )
     }
 
@@ -112,7 +112,7 @@ class WashroomRepository {
         val newIndex = (state.cycleIndex + 1) % state.groupOrder.size
         db.from("washroom_state").update({
             set("cycle_index", newIndex)
-            set("status", "CLEAN")
+            set("status", "ACTIVE")
         }) { filter { eq("room_id", roomId); eq("washroom_number", washroomNumber) } }
     }
 }
